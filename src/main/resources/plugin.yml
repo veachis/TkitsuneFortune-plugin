@@ -1,0 +1,21 @@
+name: TkitsuneFortune
+version: '${version}'
+main: com.tkitsunefortune.TKitsuneFortunePlugin
+api-version: '1.21'
+folia-supported: true
+authors: [Tkitsune]
+description: 3D Fortune Wheel (Sans Carki) plugin for Spigot and Paper 1.21.11
+
+commands:
+  tkf:
+    description: TkitsuneFortune 3D Sans Carki yonetim ve ayar menusu komutu
+    aliases: [cark, sanscarki, fw, fortunewheel, tkitsunefortune]
+    usage: "/tkf [menu|place|remove|list|ticket|mode|scale|resourcepack|reload]"
+
+permissions:
+  tkitsunefortune.admin:
+    description: Sans carki yonetim menusu ve komutlarina erisim verir
+    default: op
+  tkitsunefortune.use:
+    description: Sans carkini cevirme izni verir
+    default: true

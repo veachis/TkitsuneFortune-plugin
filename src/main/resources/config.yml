@@ -1,0 +1,221 @@
+# ============================================================================
+#                      TkitsuneFortune - 3D Şans Çarkı
+#                   Spigot & Paper 1.21.11 Destekli Eklenti
+# ============================================================================
+
+settings:
+  # Dil Seçimi / Language Selection: "TR" (Türkçe) veya "EN" (English)
+  # Oyun içinden "/tkf lang <tr|en>" komutuyla veya "/tkf" menüsünden tek tıkla değiştirebilirsiniz!
+  language: "TR"
+
+  # Görünüm Modu:
+  # - RESOURCE_PACK : Eklenti klasöründe otomatik oluşturulan TkitsuneFortune-ResourcePack.zip
+  #                   dosyasındaki 128x128 HD dokulu özel 3D modeli (ItemDisplay) kullanır.
+  # - BLOCK_DISPLAY : Sunucuya Resource Pack yüklemeden, Blockbench modelindeki parçaları
+  #                   birebir BlockDisplay olarak oluşturur ve döndürür.
+  # Oyun içinden "/tkf mode <BLOCK_DISPLAY|RESOURCE_PACK>" komutuyla anlık değiştirebilirsiniz!
+  render-mode: "RESOURCE_PACK"
+
+  # 3D Çarkın boyut çarpanı (Varsayılan: 1.7)
+  scale: 1.7
+
+  # Çarkın üzerindeki 8 dilimde 3D ödül ikonları ve ödül isimleri gözüksün mü?
+  show-slice-prizes: true
+
+  # Çarkın dönme süresi (20 tick = 1 saniye, 120 tick = 6 saniye)
+  spin-duration-ticks: 120
+
+  # Çark dönerken en az ve en fazla kaç tam tur atsın?
+  min-full-rotations: 3
+  max-full-rotations: 5
+
+  # Biletin oyuncunun elinde tutulması zorunlu olsun mu?
+  # true  -> Oyuncu özel tasarımlı bileti elinde tutarak çarka sağ tıklamalıdır.
+  # false -> Oyuncunun envanterinde bilet olması yeterlidir, sağ tıklayınca 1 adet harcanır.
+  require-ticket-in-hand: true
+
+  # Otomatik Resource Pack Sunucusu (Oyuncular sunucuya girince özel bilet ve çark dokusunu otomatik yükler!)
+  resource-pack:
+    auto-host: true
+    auto-send: true
+    force: false
+    port: 8765
+    public-host: "auto"
+
+  # Çarkın üstündeki 3D TextDisplay (Hologram) ayarları
+  # Oyun içinden "/tkf hologram" veya "/tkf" -> Hologram Tasarımı menüsünden anlık düzenleyebilirsiniz!
+  hologram:
+    enabled: true
+    title: "&6&l✦ &e&lTkitsune Şans Çarkı &6&l✦"
+    height-offset: 2.25
+    scale: 1.0
+    background: "TRANSPARENT" # TRANSPARENT, DARK, CRIMSON, GOLD, PURPLE, AQUA
+    billboard: "CENTER"       # CENTER, VERTICAL, FIXED
+    shadowed: true
+    idle-lines:
+      - "%title%"
+      - "&7Elindeki &e&lÖzel Şans Çarkı Bileti &7ile &aSağ Tıkla!"
+    spinning-lines:
+      - "%title%"
+      - "&7Çeviren: &b%player%"
+      - "&e▸ &f%slice% &e◂"
+
+# Özel Tasarımlı 3D Çark Bileti (Token) Eşyası Ayarları
+ticket:
+  material: "PAPER"
+  custom-model-data: 1004
+  item-model: "tkitsunefortune:ticket"
+  glow: false
+  name: "&6&l✦ &e&lTkitsune Şans Çarkı Bileti &6&l✦"
+  lore:
+    - "&8Özel Tasarım VIP Çark Bileti"
+    - ""
+    - "&7Bu özel işlemeli altın bileti elinde tutarak"
+    - "&6Tkitsune Şans Çarkına &7sağ tıkla ve çevir!"
+    - ""
+    - "&e▸ &aElinde tutarak Şans Çarkına sağ tıkla!"
+
+# Mesajlar
+messages:
+  prefix: "&8[&6&lŞansÇarkı&8] &r"
+  no-permission: "&cBu işlemi yapmak için yetkiniz yok!"
+  wheel-busy: "&cBu Şans Çarkı şu anda &e%spinner% &ctarafından çevriliyor! Lütfen bitmesini bekle."
+  no-ticket: "&cŞans Çarkını çevirmek için &eŞans Çarkı Biletine &cihtiyacın var!"
+  no-ticket-in-hand: "&cŞans Çarkını çevirmek için &eŞans Çarkı Biletini &celinde tutmalısın!"
+  spin-started: "&aŞans Çarkı dönmeye başladı! Bol şans..."
+  ticket-given: "&a%player% &7adlı oyuncuya &e%amount%x Şans Çarkı Bileti &7verildi!"
+  ticket-received: "&aSana &e%amount%x Şans Çarkı Bileti &averildi!"
+  wheel-placed: "&aŞans Çarkı (&e#%id%&a) başarıyla yerleştirildi! Mod: &e%mode%"
+  wheel-removed: "&cŞans Çarkı (&e#%id%&c) kaldırıldı."
+  mode-changed: "&aGörünüm modu &e%mode% &aolarak değiştirildi ve tüm çarklar güncellendi!"
+  scale-changed: "&aÇark boyutu &e%scale% &aolarak değiştirildi ve tüm çarklar güncellendi!"
+  reloaded: "&aTkitsuneFortune yapılandırması ve tüm 3D çarklar başarıyla yeniden yüklendi!"
+
+# ============================================================================
+# 8 Dilim ve Ödül Ayarları (Modeldeki renk sırasıyla birebir eşleşir!)
+# ============================================================================
+slices:
+  red:
+    index: 0
+    display-name: "&c&lKırmızı Dilim &8(&6&lJACKPOT&8)"
+    icon: "DIAMOND_BLOCK"
+    slice-label: "&c&l16x Elmas\n&a&l+2 Zümrüt Blok"
+    chance: 5.0
+    broadcast: true
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &c&lJACKPOT (16x Elmas + 2x Zümrüt Blok) &7kazandı! &6&l✦"
+    title: "&c&l✦ JACKPOT! ✦"
+    subtitle: "&fKazandığın ödül: &c&l16x Elmas &7+ &a&l2x Zümrüt Blok"
+    sound: "UI_TOAST_CHALLENGE_COMPLETE"
+    messages:
+      - "&aTebrikler! &c&lKırmızı Dilim (JACKPOT) &aödülünü kazandın!"
+    commands:
+      - "give %player% diamond 16"
+      - "give %player% emerald_block 2"
+
+  orange:
+    index: 1
+    display-name: "&6&lTuruncu Dilim &8(&eAltın Hazinesi&8)"
+    icon: "GOLD_INGOT"
+    slice-label: "&6&l32x Altın"
+    chance: 12.0
+    broadcast: false
+    title: "&6&lTEBRİKLER!"
+    subtitle: "&fKazandığın ödül: &632x Altın Külçesi"
+    sound: "ENTITY_PLAYER_LEVELUP"
+    messages:
+      - "&aTebrikler! &6&lTuruncu Dilim &aödülü olarak &e32x Altın Külçesi &akazandın!"
+    commands:
+      - "give %player% gold_ingot 32"
+
+  yellow:
+    index: 2
+    display-name: "&e&lSarı Dilim &8(&eBüyülü Altın Elma&8)"
+    icon: "ENCHANTED_GOLDEN_APPLE"
+    slice-label: "&e&lBüyülü Elma"
+    chance: 8.0
+    broadcast: true
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &e&lBüyülü Altın Elma &7kazandı!"
+    title: "&e&lŞANSLISIN!"
+    subtitle: "&fKazandığın ödül: &d1x Büyülü Altın Elma"
+    sound: "ENTITY_PLAYER_LEVELUP"
+    messages:
+      - "&aTebrikler! &e&lSarı Dilim &aödülü olarak &d1x Büyülü Altın Elma &akazandın!"
+    commands:
+      - "give %player% enchanted_golden_apple 1"
+
+  green:
+    index: 3
+    display-name: "&a&lYeşil Dilim &8(&aZümrüt Paketi&8)"
+    icon: "EMERALD"
+    slice-label: "&a&l16x Zümrüt"
+    chance: 18.0
+    broadcast: false
+    title: "&a&lKAZANDIN!"
+    subtitle: "&fKazandığın ödül: &a16x Zümrüt"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    messages:
+      - "&aTebrikler! &a&lYeşil Dilim &aödülü olarak &216x Zümrüt &akazandın!"
+    commands:
+      - "give %player% emerald 16"
+
+  cyan:
+    index: 4
+    display-name: "&b&lTurkuaz Dilim &8(&bElmas Paketi&8)"
+    icon: "DIAMOND"
+    slice-label: "&b&l8x Elmas"
+    chance: 10.0
+    broadcast: false
+    title: "&b&lHARİKA!"
+    subtitle: "&fKazandığın ödül: &b8x Elmas"
+    sound: "ENTITY_PLAYER_LEVELUP"
+    messages:
+      - "&aTebrikler! &b&lTurkuaz Dilim &aödülü olarak &b8x Elmas &akazandın!"
+    commands:
+      - "give %player% diamond 8"
+
+  blue:
+    index: 5
+    display-name: "&9&lMavi Dilim &8(&9Tecrübe İksiri&8)"
+    icon: "EXPERIENCE_BOTTLE"
+    slice-label: "&9&l32x XP Şişesi"
+    chance: 20.0
+    broadcast: false
+    title: "&9&lTEBRİKLER!"
+    subtitle: "&fKazandığın ödül: &932x Tecrübe Şişesi"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    messages:
+      - "&aTebrikler! &9&lMavi Dilim &aödülü olarak &b32x Tecrübe Şişesi &akazandın!"
+    commands:
+      - "give %player% experience_bottle 32"
+
+  purple:
+    index: 6
+    display-name: "&5&lMor Dilim &8(&5Netherite Hurdası&8)"
+    icon: "NETHERITE_SCRAP"
+    slice-label: "&5&l2x Netherite"
+    chance: 7.0
+    broadcast: true
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &5&l2x Netherite Hurdası &7kazandı!"
+    title: "&5&lEFSANEVİ!"
+    subtitle: "&fKazandığın ödül: &52x Netherite Hurdası"
+    sound: "UI_TOAST_CHALLENGE_COMPLETE"
+    messages:
+      - "&aTebrikler! &5&lMor Dilim &aödülü olarak &d2x Netherite Hurdası &akazandın!"
+    commands:
+      - "give %player% netherite_scrap 2"
+
+  magenta:
+    index: 7
+    display-name: "&d&lPembe Dilim &8(&dÜcretsiz Tekrar Bileti&8)"
+    icon: "TICKET"
+    slice-label: "&d&l1x Bilet\n&f&l+16x Demir"
+    chance: 20.0
+    broadcast: false
+    title: "&d&lTEKRAR ÇEVİR!"
+    subtitle: "&fKazandığın ödül: &e1x Şans Çarkı Bileti + 16x Demir"
+    sound: "ENTITY_PLAYER_LEVELUP"
+    messages:
+      - "&aTebrikler! &d&lPembe Dilim &aödülü olarak &e1x Şans Çarkı Bileti &ave &f16x Demir &akazandın!"
+    commands:
+      - "tkf ticket %player% 1"
+      - "give %player% iron_ingot 16"

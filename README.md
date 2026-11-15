@@ -5,25 +5,95 @@
 </p>
 
 <p align="center">
-  <b>Minecraft 1.21.11 (Spigot & Paper)</b> için geliştirilmiş, <b>BlockDisplay & ItemDisplay</b> tabanlı, oyun içi <b>Sürükle-Bırak Ödül & Hologram Tasarım Menüsü (GUI)</b>, dahili <b>Otomatik Resource Pack Sunucusu</b> ve <b>Türkçe / İngilizce (TR/EN)</b> dil desteğine sahip 3D Şans Çarkı eklentisi.
+  <a href="#-english-documentation"><b>🇬🇧 English Documentation</b></a> •
+  <a href="#-türkçe-dokümantasyon"><b>🇹🇷 Türkçe Dokümantasyon</b></a>
+</p>
+
+<p align="center">
+  <b>EN:</b> A lightweight, fast, and fully customizable <b>3D Wheel of Fortune</b> plugin for <b>Spigot & Paper 1.21.11</b> featuring smooth 3D quaternion spin physics, an in-game Drag & Drop Prize Editor, Hologram Designer, Sound Editor, Ticket Customizer, built-in Resource Pack HTTP Host, and instant <b>English / Turkish (EN/TR)</b> language switching.<br><br>
+  <b>TR:</b> <b>Spigot & Paper 1.21.11</b> için geliştirilmiş, pürüzsüz 3D dönüş fiziğine, oyun içi Sürükle-Bırak Ödül & Şans Oranı Menüsüne, Hologram Tasarımcısına, Ses Düzenleyicisine, Bilet Özelleştiricisine, dahili Otomatik Resource Pack Sunucusuna ve anlık <b>Türkçe / İngilizce (TR/EN)</b> dil desteğine sahip 3D Şans Çarkı eklentisi.
 </p>
 
 ---
 
-## 🌍 İçindekiler / Table of Contents
-- [🇹🇷 Türkçe Dokümantasyon](#-türkçe-dokümantasyon)
-  - [Özellikler](#-özellikler)
-  - [Kurulum](#-kurulum)
-  - [Komutlar ve Yetkiler](#-komutlar-ve-yetkiler)
-  - [Oyun İçi Yönetim ve Tasarım Menüsü (GUI)](#-oyun-içi-yönetim-ve-tasarım-menüsü-gui)
-  - [Kaynak Koddan Derleme (Build)](#-kaynak-koddan-derleme-build)
-  - [Proje Yapısı ve Geliştirici Rehberi](#-proje-yapısı-ve-geliştirici-rehberi)
-- [🇬🇧 English Documentation](#-english-documentation)
-  - [Features](#-features)
-  - [Installation](#-installation)
-  - [Commands & Permissions](#-commands--permissions)
-  - [In-Game Admin & Design GUI](#-in-game-admin--design-gui)
-  - [Building from Source](#-building-from-source)
+# 🇬🇧 English Documentation
+
+## ✨ Features
+
+- **Smooth 3D Spin Physics (`Display` Entities):**
+  - 8-slice 3D wheel and ornate stand powered by Minecraft `1.21.11` `ItemDisplay`, `BlockDisplay`, `TextDisplay`, and `Interaction` entities with cubic ease-out deceleration, sound effects, and particles.
+- **Dual 3D Render Modes (`RESOURCE_PACK` & `BLOCK_DISPLAY`):**
+  - **`RESOURCE_PACK` Mode (Default):** Uses custom Blockbench 3D models and a built-in HTTP server that automatically hosts and sends the resource pack to players when they join.
+  - **`BLOCK_DISPLAY` Mode:** Builds the 111-element 3D model purely out of vanilla `BlockDisplay` blocks—no resource pack required.
+- **Rotating 3D Slice Prizes & Dynamic Broadcasts:**
+  - Each of the 8 slices displays its 3D reward icon and prize label right on the wheel face, rotating in real time.
+  - Changing a slice's prize items, label, or title in the GUI automatically updates all win messages, titles/subtitles, and server-wide broadcasts (`%slice%` & `%reward%`).
+- **In-Game Drag & Drop Prize & Chance GUI (`/tkf`):**
+  - Edit slice win weights/probabilities, drag & drop up to 9 physical reward items per slice (supports custom NBT, enchants, and items), or configure console command rewards in-game.
+- **Custom 3D Ticket Name, Lore & Glow Editor (`/tkf ticketname` or `/tkf` ➔ Slot 50):**
+  - Customize the ticket's display name, multi-line lore, and enchantment glow directly from the GUI or via command; existing tickets in online players' inventories update automatically.
+- **Full 3D Hologram Designer & Toggle (`/tkf hologram` or `/tkf` ➔ Slot 47):**
+  - Toggle the hologram ON/OFF, edit the title (`%title%`), idle lines, spinning lines, height offset, text scale, background style, billboard mode, or apply **6 one-click preset themes**.
+- **Wheel Sound Customizer (`/tkf sound` or `/tkf` ➔ Slot 48):**
+  - Toggle all wheel sounds ON/OFF, adjust master volume, and customize or preview the **Spin Start**, **Spin Tick/Click**, **Default Win**, **Error**, and **8 individual Per-Slice Win Sounds**.
+- **Built-In Bilingual Support (`EN` & `TR`):**
+  - Switch the entire plugin (menus, messages, ticket, hologram, and slice labels) between **English (`EN`)** and **Turkish (`TR`)** with a single click in `/tkf` (Slot 46) or via `/tkf lang <en|tr>`.
+
+---
+
+## 📦 Installation
+
+1. Download [`releases/TkitsuneFortune-1.0.0.jar`](releases/TkitsuneFortune-1.0.0.jar) (or build from source) and place it into your server's `plugins/` directory.
+2. Start your **Spigot** or **Paper 1.21.11** server (**Java 21+**).
+3. Run `/tkf lang en` in-game to switch all menus and wheel texts to English.
+4. Run `/tkf` to open the Admin GUI and click **Place Wheel Here** (Slot 37)!
+
+---
+
+## ⌨ Commands & Permissions
+
+**Main Command:** `/tkf` *(Aliases: `/fw`, `/fortunewheel`, `/tkitsunefortune`, `/cark`, `/sanscarki`)*
+
+| Command | Description |
+| :--- | :--- |
+| `/tkf` | Opens the interactive Admin Settings, Slice Prize, Sound & Hologram GUI. |
+| `/tkf place [id]` | Places a 3D Wheel of Fortune on the block you are looking at. |
+| `/tkf remove [id\|nearest]` | Removes a Wheel of Fortune by ID or the nearest one within 8 blocks. |
+| `/tkf list` | Lists all active Fortune Wheels and their coordinates. |
+| `/tkf ticket <player> [amount]` | Gives custom 3D **Fortune Wheel Tickets** to a player. |
+| `/tkf ticketname <new name>` | Changes the custom Ticket item's display name (`&` and `&#RRGGBB` supported). |
+| `/tkf hologram [on\|off\|menu]` | Opens the Hologram Design GUI or toggles the hologram ON/OFF. |
+| `/tkf name <new title>` | Updates the wheel hologram title (`&` and `&#RRGGBB` supported). |
+| `/tkf sound [on\|off\|menu]` | Opens the Wheel Sound Settings GUI or mutes/unmutes wheel sounds. |
+| `/tkf lang <en\|tr>` | Switches the plugin language between English (`EN`) and Turkish (`TR`). |
+| `/tkf mode <RESOURCE_PACK\|BLOCK_DISPLAY>` | Switches the 3D rendering mode on the fly. |
+| `/tkf scale <0.5 - 4.0>` | Adjusts the 3D wheel size multiplier (Default: `1.7`). |
+| `/tkf resourcepack` | Regenerates and sends the Resource Pack `.zip` to online players. |
+| `/tkf reload` | Reloads `config.yml`, `wheels.yml`, and respawns all active wheels. |
+
+### Permissions
+- `tkitsunefortune.use` *(Default: `true`)* — Allows players to spin the Wheel of Fortune using a ticket.
+- `tkitsunefortune.admin` *(Default: `op`)* — Grants access to `/tkf` admin menus and all management commands.
+
+---
+
+## 🛠 Building from Source
+
+This project uses **Java 21** and includes the **Gradle Wrapper**:
+
+```bash
+# Linux / macOS
+chmod +x gradlew
+./gradlew clean build
+
+# Windows (PowerShell / CMD)
+.\gradlew.bat clean build
+```
+
+The compiled JAR file will be generated at:
+```text
+build/libs/TkitsuneFortune-1.0.0.jar
+```
 
 ---
 
@@ -31,28 +101,32 @@
 
 ## ✨ Özellikler
 
-- **Gerçek 3D Dönüş Fizikleri (`60 FPS` Quaternion İnterpolasyonu):**
-  - 8 renkli dilime sahip 3D çark gövdesi ve sabit standı, Minecraft `1.21.11` `Display` varlıkları ile pürüzsüz hızlanma ve yavaşlama (ease-out) fiziğiyle döner.
+- **Gerçek 3D Dönüş Fizikleri (`Display` Varlıkları):**
+  - 8 renkli dilime sahip 3D çark gövdesi ve sabit standı, Minecraft `1.21.11` `ItemDisplay`, `BlockDisplay`, `TextDisplay` ve `Interaction` varlıkları ile pürüzsüz hızlanma ve yavaşlama (ease-out) fiziğiyle döner.
 - **Çift 3D Görünüm Modu (`RESOURCE_PACK` & `BLOCK_DISPLAY`):**
   - **`RESOURCE_PACK` Modu (Varsayılan):** Özel Blockbench 3D çark modelini, standını ve 3D altın biletini yerleşik HTTP sunucusu üzerinden oyunculara otomatik gönderir.
   - **`BLOCK_DISPLAY` Modu:** Hiçbir doku paketi gerektirmeden 111 parçalı 3D modeli doğrudan `BlockDisplay` bloklarıyla oluşturur.
-- **Çark Üstü 3D Ödül İkonları & Yazıları:**
+- **Çark Üstü 3D Ödül İkonları & Dinamik Duyuru Sistemi:**
   - Her dilimin dış kenarında o dilimin ödül ikonu (`ItemDisplay`) ve ödül adı (`TextDisplay`) çarkla birlikte gerçek zamanlı olarak döner.
+  - Bir dilimin ödülünü, çark üstü yazısını veya başlığını değiştirdiğinizde ekrana gelen **Title/Subtitle**, **sohbet ödül mesajı** ve **sunucu duyuruları (Broadcast)** otomatik olarak yeni ödül ismiyle (`%slice%` ve `%reward%`) güncellenir.
 - **Sürükle & Bırak (Drag & Drop) Ödül ve Şans Oranı Menüsü (`/tkf`):**
-  - Dosya düzenlemeye gerek kalmadan oyun içinden her dilimin **şans ağırlığını (yüzdesini)** ayarlayabilir, envanterinizden **9 ödül slotuna** eşya sürükleyip bırakabilir (büyülü/özel NBT'li eşyalar dahil) veya konsol komut ödülleri ekleyebilirsiniz.
-- **Tam Kapsamlı Hologram Tasarım & Aç/Kapat Menüsü (`/tkf hologram`):**
-  - Çarkın üstündeki 3D hologramı tamamen açıp kapatabilir, başlığını (`%title%`), bekleme (`idle-lines`) ve dönüş (`spinning-lines`) satırlarını, yüksekliğini, yazı boyutunu, arka plan rengini/şeffaflığını ve **6 hazır tasarım şablonunu** tek tıkla değiştirebilirsiniz.
+  - Oyun içinden her dilimin **şans ağırlığını (yüzdesini)** ayarlayabilir, envanterinizden **9 ödül slotuna** eşya sürükleyip bırakabilir veya konsol komut ödülleri ekleyebilirsiniz.
+- **Bilet İsmi, Açıklaması (Lore) ve Parlama Düzenleyici (`/tkf biletisim` veya `/tkf` ➔ 50. Slot):**
+  - Özel çark biletinin ismini, açıklama satırlarını ve büyü parlama (Glow) efektini doğrudan menüden veya komutla değiştirebilirsiniz.
+- **Hologram Tasarım & Aç/Kapat Menüsü (`/tkf hologram` veya `/tkf` ➔ 47. Slot):**
+  - Çarkın üstündeki 3D hologramı tamamen açıp kapatabilir, başlığını (`%title%`), bekleme (`idle-lines`) ve dönüş (`spinning-lines`) satırlarını, yüksekliğini, yazı boyutunu, arka plan rengini ve **6 hazır tasarım şablonunu** tek tıkla değiştirebilirsiniz.
+- **Çark Ses Ayarları Menüsü (`/tkf ses` veya `/tkf` ➔ 48. Slot):**
+  - Tüm çark seslerini açıp kapatabilir, ses seviyesini (`volume`) ayarlayabilir; **Çark Başlangıç**, **Dönüş Tıkırtı (Tick)**, **Genel Kazanma**, **Uyarı/Hata** ve **8 dilimin her birine özel kazanma seslerini** oyun içinden dinleyerek değiştirebilirsiniz.
 - **Çift Dil Desteği (`TR` / `EN`):**
-  - `/tkf lang <tr|en>` komutuyla veya `/tkf` menüsündeki **Dil / Language** butonuyla tüm menüleri, mesajları, biletleri, hologramı ve dilim yazılarını tek tıkla Türkçe veya İngilizceye çevirebilirsiniz.
+  - `/tkf lang <tr|en>` komutuyla veya `/tkf` menüsündeki **Dil / Language (46. Slot)** butonuyla tüm menüleri, mesajları, biletleri, hologramı ve dilim yazılarını tek tıkla Türkçe veya İngilizceye çevirebilirsiniz.
 
 ---
 
 ## 📦 Kurulum
 
-1. Hazır derlenmiş [`releases/TkitsuneFortune-1.0.0.jar`](releases/TkitsuneFortune-1.0.0.jar) dosyasını (veya `gradlew build` ile derlediğiniz `.jar` dosyasını) sunucunuzun `plugins/` klasörüne atın.
+1. Hazır derlenmiş [`releases/TkitsuneFortune-1.0.0.jar`](releases/TkitsuneFortune-1.0.0.jar) dosyasını sunucunuzun `plugins/` klasörüne atın.
 2. Sunucunuzu başlatın (`Spigot` veya `Paper 1.21.11`, **Java 21+**).
-3. Oyun içinden `/tkf` yazarak yönetim menüsünü açın ve **Baktığın Yere Çark Kur** butonuna tıklayın!
-4. *(İsteğe Bağlı)* Eklenti, `plugins/TkitsuneFortune/TkitsuneFortune-ResourcePack.zip` dosyasını otomatik üretir ve `config.yml` içindeki `settings.resource-pack.port` (varsayılan `8765`) üzerinden oyunculara otomatik gönderir.
+3. Oyun içinden `/tkf` yazarak yönetim menüsünü açın ve **Baktığın Yere Çark Kur (37. Slot)** butonuna tıklayın!
 
 ---
 
@@ -62,13 +136,15 @@
 
 | Komut | Açıklama |
 | :--- | :--- |
-| `/tkf` | Ödül, Şans Oranı, Hologram ve Çark Yönetim Menüsünü (GUI) açar. |
+| `/tkf` | Ödül, Şans Oranı, Ses, Bilet, Hologram ve Çark Yönetim Menüsünü (GUI) açar. |
 | `/tkf place [id]` | Baktığınız bloğun üstüne yeni bir 3D Şans Çarkı kurar. |
 | `/tkf remove [id\|nearest]` | Belirtilen ID'deki veya en yakındaki (8 blok) Şans Çarkını kaldırır. |
 | `/tkf list` | Dünyadaki aktif Şans Çarklarını ve koordinatlarını listeler. |
-| `/tkf ticket <oyuncu> [adet]` | Oyuncuya özel 3D tasarımlı **Tkitsune Şans Çarkı Bileti** verir. |
+| `/tkf ticket <oyuncu> [adet]` | Oyuncuya özel 3D tasarımlı **Şans Çarkı Bileti** verir. |
+| `/tkf biletisim <yeni isim>` | Bilet eşyasının ismini değiştirir (`&` ve `&#RRGGBB` HEX destekli). |
 | `/tkf hologram [ac\|kapat\|menu]` | Hologram Tasarım Menüsünü açar veya hologramı hızlıca açıp kapatır. |
-| `/tkf isim <yeni başlık>` | Çarkın üstündeki hologram başlığını değiştirir (`&` ve `&#RRGGBB` destekli). |
+| `/tkf isim <yeni başlık>` | Çarkın üstündeki hologram başlığını değiştirir. |
+| `/tkf ses [ac\|kapat\|menu]` | Çark Ses Ayarları Menüsünü açar veya sesleri açıp kapatır. |
 | `/tkf lang <tr\|en>` | Eklenti dilini Türkçe (`TR`) veya İngilizce (`EN`) olarak değiştirir. |
 | `/tkf mode <RESOURCE_PACK\|BLOCK_DISPLAY>` | 3D görünüm modunu anlık olarak değiştirir. |
 | `/tkf scale <0.5 - 4.0>` | 3D Şans Çarkının boyut çarpanını değiştirir (Varsayılan: `1.7`). |
@@ -81,135 +157,59 @@
 
 ---
 
-## 🖥 Oyun İçi Yönetim ve Tasarım Menüsü (GUI)
-
-1. **Ana Menü (`/tkf`):**
-   - **8 Dilim Slotu:** Sol tıklayarak dilimin ödül/şans düzenleyicisini açın; Sağ/Shift-Sağ tıklayarak şans ağırlığını hızlıca `+1.0` / `-1.0` değiştirin.
-   - **Alt Kontrol Butonları:** Çark kurma/kaldırma, bilet alma, çark boyutu (`scale`), dönüş süresi (`ticks`), 3D görünüm modu, dil seçimi (`TR`/`EN`), hologram tasarım menüsü ve doku paketi gönderme.
-2. **Dilim Ödül & Şans Düzenleyici:**
-   - Ortadaki **9 boş slota** envanterinizden istediğiniz eşyaları sürükleyip bırakın.
-   - İlk slota koyduğunuz eşya otomatik olarak çarkın o dilimindeki **3D dönen ikon** ve **dilim yazısı** olur (veya sol üstteki ikon slotuna istediğiniz eşyayla tıklayarak özel ikon belirleyebilirsiniz).
-3. **Hologram Tasarım Menüsü (`/tkf hologram`):**
-   - Hologramı açıp kapatma, başlık (`%title%`), bekleme ve dönüş satırlarını tek tek veya `|` ile toplu düzenleme, yükseklik, yazı boyutu, arka plan stili ve **6 hazır tema şablonu**.
-
----
-
 ## 🛠 Kaynak Koddan Derleme (Build)
 
-Bu proje **Java 21** ve **Gradle Wrapper** kullanır. Bilgisayarınızda **JDK 21** kurulu olması yeterlidir:
+Bilgisayarınızda **JDK 21+** kurulu olması yeterlidir:
 
-### Windows (PowerShell / CMD)
 ```powershell
+# Windows (PowerShell / CMD)
 .\gradlew.bat clean build
 ```
-
-### Linux / macOS
 ```bash
+# Linux / macOS
 chmod +x gradlew
 ./gradlew clean build
 ```
 
-Derleme tamamlandığında kullanıma hazır eklenti dosyası şu konumda oluşturulur:
-```text
-build/libs/TkitsuneFortune-1.0.0.jar
-```
+Derlenen `.jar` dosyası `build/libs/TkitsuneFortune-1.0.0.jar` konumunda oluşturulur.
 
 ---
 
-## 📂 Proje Yapısı ve Geliştirici Rehberi
+## 📂 Proje Yapısı / Project Structure
 
 ```text
 TkitsuneFortune/
-├── assets/                                # Önizleme görselleri ve Blockbench kaynak dosyaları (.bbmodel)
+├── assets/                                # Banner, preview renders & Blockbench (.bbmodel) files
+│   ├── banner.jpg
 │   ├── preview_render.png
 │   ├── ticket_preview_render.png
-│   ├── tkitsunefortune.bbmodel            # 3D Çark + Stand Blockbench projesi
-│   └── tkitsunefortune_ticket.bbmodel     # 3D Özel Bilet Blockbench projesi
-├── releases/                              # Hazır derlenmiş .jar ve ResourcePack .zip
+│   ├── tkitsunefortune.bbmodel
+│   └── tkitsunefortune_ticket.bbmodel
+├── releases/                              # Pre-built plugin JAR & ResourcePack ZIP
 │   ├── TkitsuneFortune-1.0.0.jar
 │   └── TKitsuneFortune-ResourcePack.zip
 ├── src/main/
 │   ├── java/com/tkitsunefortune/
-│   │   ├── TKitsuneFortunePlugin.java     # Ana eklenti sınıfı
+│   │   ├── TKitsuneFortunePlugin.java
 │   │   ├── command/FortuneWheelCommand.java
-│   │   ├── gui/                           # Oyun içi Admin, Dilim ve Hologram GUI sınıfları
-│   │   ├── listener/                      # Sağ tık etkileşim ve koruma dinleyicileri
-│   │   ├── model/                         # Blockbench JSON -> 3D BlockDisplay çözümleyici
-│   │   ├── resourcepack/                  # Otomatik Resource Pack üretici & HTTP sunucusu
-│   │   ├── ticket/TicketManager.java      # Özel PDC etiketli 3D Bilet yöneticisi
-│   │   ├── util/                          # ColorUtil (HEX & renk) ve LanguageManager (TR/EN)
-│   │   └── wheel/                         # 3D FortuneWheel, SpinTask, SliceManager, WheelManager
+│   │   ├── gui/                           # Main, Slice, Hologram & Sound GUI Managers/Listeners
+│   │   ├── listener/WheelInteractionListener.java
+│   │   ├── model/                         # Blockbench JSON -> 3D BlockDisplay parser
+│   │   ├── resourcepack/                  # Auto ResourcePack generator & embedded HTTP server
+│   │   ├── ticket/TicketManager.java
+│   │   ├── util/                          # ColorUtil & LanguageManager (TR/EN)
+│   │   └── wheel/                         # FortuneWheel, SpinTask, SliceManager, WheelManager
 │   └── resources/
 │       ├── config.yml
 │       ├── plugin.yml
-│       ├── models/                        # 3D JSON modelleri (stand, wheel, ticket)
-│       └── textures/                      # 64x64 dokular (tkitsunefortune.png, ticket.png)
+│       ├── models/                        # 3D JSON models (stand, wheel, ticket)
+│       └── textures/                      # 64x64 textures (tkitsunefortune.png, ticket.png)
 ├── build.gradle
 └── settings.gradle
 ```
 
-### 🎨 3D Modeli veya Dokuyu Özelleştirme (Blockbench)
-1. `assets/tkitsunefortune.bbmodel` veya `assets/tkitsunefortune_ticket.bbmodel` dosyasını [Blockbench](https://www.blockbench.net/) ile açın.
-2. Model veya doku üzerinde değişiklik yaptıktan sonra:
-   - Stand elemanlarını `src/main/resources/models/tkitsunefortune_stand.json`
-   - Dönen çark elemanlarını `src/main/resources/models/tkitsunefortune_wheel.json`
-   - Ana dokuyu `src/main/resources/textures/tkitsunefortune.png` olarak dışa aktarın.
-3. `./gradlew build` komutunu çalıştırın; eklenti yeni modeli ve doku paketini otomatik olarak paketleyecektir.
-
 ---
 
-# 🇬🇧 English Documentation
-
-## ✨ Features
-
-- **Smooth 3D Spin Physics:** Real-time `Display` entity quaternion interpolation with cubic ease-out deceleration and tick-by-tick sound/particle effects.
-- **Dual 3D Render Modes (`RESOURCE_PACK` & `BLOCK_DISPLAY`):**
-  - `RESOURCE_PACK`: Uses custom Blockbench 3D models (`ItemDisplay`) with a built-in HTTP server that automatically hosts and sends the resource pack to players.
-  - `BLOCK_DISPLAY`: Builds the 111-element 3D model purely out of vanilla `BlockDisplay` entities—no resource pack required.
-- **Rotating 3D Slice Prizes & Labels:** Each of the 8 wheel slices displays a rotating 3D item icon and customizable text label on the outer ring.
-- **In-Game Drag & Drop Admin GUI (`/tkf`):** Edit slice win chances, drag and drop up to 9 physical reward items per slice (supports custom NBT/enchants), manage console commands, and customize the 3D hologram without touching config files.
-- **Full Hologram Design Editor (`/tkf hologram`):** Toggle the hologram ON/OFF, edit the title (`%title%`), idle lines, spinning lines, height offset, text scale, background style, billboard mode, or apply **6 one-click preset themes**.
-- **Built-In Bilingual Support (`TR` & `EN`):** Switch the entire plugin (menus, messages, ticket, hologram, and slice labels) between **Turkish (`TR`)** and **English (`EN`)** anytime via `/tkf lang en` or the in-game GUI button.
-
-## 📦 Installation
-
-1. Drop [`releases/TkitsuneFortune-1.0.0.jar`](releases/TkitsuneFortune-1.0.0.jar) into your server's `plugins/` folder.
-2. Start your **Spigot** or **Paper 1.21.11** server (**Java 21+**).
-3. Run `/tkf lang en` in-game to switch all menus and wheel texts to English, then run `/tkf` and click **Place Wheel Here**!
-
-## ⌨ Commands & Permissions
-
-| Command | Description |
-| :--- | :--- |
-| `/tkf` | Opens the interactive Admin Settings, Slice Prize & Hologram GUI. |
-| `/tkf place [id]` | Places a 3D Wheel of Fortune on the block you are looking at. |
-| `/tkf remove [id\|nearest]` | Removes a Wheel of Fortune by ID or the nearest one within 8 blocks. |
-| `/tkf list` | Lists all active Fortune Wheels and their coordinates. |
-| `/tkf ticket <player> [amount]` | Gives custom 3D **Fortune Wheel Tickets** to a player. |
-| `/tkf hologram [on\|off\|menu]` | Opens the Hologram Design GUI or toggles the hologram ON/OFF. |
-| `/tkf name <new title>` | Updates the wheel hologram title (supports `&` and `&#RRGGBB` hex colors). |
-| `/tkf lang <tr\|en>` | Switches plugin language between Turkish (`TR`) and English (`EN`). |
-| `/tkf mode <RESOURCE_PACK\|BLOCK_DISPLAY>` | Switches the 3D rendering mode on the fly. |
-| `/tkf scale <0.5 - 4.0>` | Adjusts the 3D wheel size multiplier (Default: `1.7`). |
-| `/tkf resourcepack` | Regenerates and sends the Resource Pack `.zip` to online players. |
-| `/tkf reload` | Reloads `config.yml`, `wheels.yml`, and respawns all active wheels. |
-
-## 🛠 Building from Source
-
-Requires **JDK 21+**:
-
-```bash
-# Linux / macOS
-./gradlew clean build
-
-# Windows
-.\gradlew.bat clean build
-```
-
-The compiled plugin JAR will be output to `build/libs/TkitsuneFortune-1.0.0.jar`.
-
----
-
-## 📄 License
+## 📄 License / Lisans
 
 Distributed under the [MIT License](LICENSE).

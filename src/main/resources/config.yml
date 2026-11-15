@@ -60,6 +60,15 @@ settings:
       - "&7Çeviren: &b%player%"
       - "&e▸ &f%slice% &e◂"
 
+  # Çark Ses Ayarları ("/tkf ses" veya "/tkf" -> 48. Slot üzerinden oyun içinden değiştirebilirsiniz!)
+  sounds:
+    enabled: true
+    volume: 1.0
+    spin-start: "BLOCK_AMETHYST_BLOCK_CHIME"
+    spin-tick: "BLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON"
+    win-default: "ENTITY_PLAYER_LEVELUP"
+    error: "BLOCK_NOTE_BLOCK_BASS"
+
 # Özel Tasarımlı 3D Çark Bileti (Token) Eşyası Ayarları
 ticket:
   material: "PAPER"
@@ -102,12 +111,12 @@ slices:
     slice-label: "&c&l16x Elmas\n&a&l+2 Zümrüt Blok"
     chance: 5.0
     broadcast: true
-    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &c&lJACKPOT (16x Elmas + 2x Zümrüt Blok) &7kazandı! &6&l✦"
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦"
     title: "&c&l✦ JACKPOT! ✦"
-    subtitle: "&fKazandığın ödül: &c&l16x Elmas &7+ &a&l2x Zümrüt Blok"
+    subtitle: "&fKazandığın ödül: &r%reward%"
     sound: "UI_TOAST_CHALLENGE_COMPLETE"
     messages:
-      - "&aTebrikler! &c&lKırmızı Dilim (JACKPOT) &aödülünü kazandın!"
+      - "&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!"
     commands:
       - "give %player% diamond 16"
       - "give %player% emerald_block 2"
@@ -119,11 +128,12 @@ slices:
     slice-label: "&6&l32x Altın"
     chance: 12.0
     broadcast: false
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦"
     title: "&6&lTEBRİKLER!"
-    subtitle: "&fKazandığın ödül: &632x Altın Külçesi"
+    subtitle: "&fKazandığın ödül: &r%reward%"
     sound: "ENTITY_PLAYER_LEVELUP"
     messages:
-      - "&aTebrikler! &6&lTuruncu Dilim &aödülü olarak &e32x Altın Külçesi &akazandın!"
+      - "&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!"
     commands:
       - "give %player% gold_ingot 32"
 
@@ -134,29 +144,30 @@ slices:
     slice-label: "&e&lBüyülü Elma"
     chance: 8.0
     broadcast: true
-    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &e&lBüyülü Altın Elma &7kazandı!"
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦"
     title: "&e&lŞANSLISIN!"
-    subtitle: "&fKazandığın ödül: &d1x Büyülü Altın Elma"
+    subtitle: "&fKazandığın ödül: &r%reward%"
     sound: "ENTITY_PLAYER_LEVELUP"
     messages:
-      - "&aTebrikler! &e&lSarı Dilim &aödülü olarak &d1x Büyülü Altın Elma &akazandın!"
+      - "&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!"
     commands:
       - "give %player% enchanted_golden_apple 1"
 
   green:
     index: 3
-    display-name: "&a&lYeşil Dilim &8(&aZümrüt Paketi&8)"
-    icon: "EMERALD"
-    slice-label: "&a&l16x Zümrüt"
+    display-name: "&a&lYeşil Dilim &8(&aNetherite Kılıcı&8)"
+    icon: "NETHERITE_SWORD"
+    slice-label: "&a&l1x Netherite Kılıcı"
     chance: 18.0
     broadcast: false
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦"
     title: "&a&lKAZANDIN!"
-    subtitle: "&fKazandığın ödül: &a16x Zümrüt"
+    subtitle: "&fKazandığın ödül: &r%reward%"
     sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
     messages:
-      - "&aTebrikler! &a&lYeşil Dilim &aödülü olarak &216x Zümrüt &akazandın!"
+      - "&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!"
     commands:
-      - "give %player% emerald 16"
+      - "give %player% netherite_sword 1"
 
   cyan:
     index: 4
@@ -165,11 +176,12 @@ slices:
     slice-label: "&b&l8x Elmas"
     chance: 10.0
     broadcast: false
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦"
     title: "&b&lHARİKA!"
-    subtitle: "&fKazandığın ödül: &b8x Elmas"
+    subtitle: "&fKazandığın ödül: &r%reward%"
     sound: "ENTITY_PLAYER_LEVELUP"
     messages:
-      - "&aTebrikler! &b&lTurkuaz Dilim &aödülü olarak &b8x Elmas &akazandın!"
+      - "&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!"
     commands:
       - "give %player% diamond 8"
 
@@ -180,11 +192,12 @@ slices:
     slice-label: "&9&l32x XP Şişesi"
     chance: 20.0
     broadcast: false
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦"
     title: "&9&lTEBRİKLER!"
-    subtitle: "&fKazandığın ödül: &932x Tecrübe Şişesi"
+    subtitle: "&fKazandığın ödül: &r%reward%"
     sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
     messages:
-      - "&aTebrikler! &9&lMavi Dilim &aödülü olarak &b32x Tecrübe Şişesi &akazandın!"
+      - "&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!"
     commands:
       - "give %player% experience_bottle 32"
 
@@ -195,12 +208,12 @@ slices:
     slice-label: "&5&l2x Netherite"
     chance: 7.0
     broadcast: true
-    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &5&l2x Netherite Hurdası &7kazandı!"
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦"
     title: "&5&lEFSANEVİ!"
-    subtitle: "&fKazandığın ödül: &52x Netherite Hurdası"
+    subtitle: "&fKazandığın ödül: &r%reward%"
     sound: "UI_TOAST_CHALLENGE_COMPLETE"
     messages:
-      - "&aTebrikler! &5&lMor Dilim &aödülü olarak &d2x Netherite Hurdası &akazandın!"
+      - "&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!"
     commands:
       - "give %player% netherite_scrap 2"
 
@@ -211,11 +224,12 @@ slices:
     slice-label: "&d&l1x Bilet\n&f&l+16x Demir"
     chance: 20.0
     broadcast: false
+    broadcast-message: "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦"
     title: "&d&lTEKRAR ÇEVİR!"
-    subtitle: "&fKazandığın ödül: &e1x Şans Çarkı Bileti + 16x Demir"
+    subtitle: "&fKazandığın ödül: &r%reward%"
     sound: "ENTITY_PLAYER_LEVELUP"
     messages:
-      - "&aTebrikler! &d&lPembe Dilim &aödülü olarak &e1x Şans Çarkı Bileti &ave &f16x Demir &akazandın!"
+      - "&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!"
     commands:
       - "tkf ticket %player% 1"
       - "give %player% iron_ingot 16"

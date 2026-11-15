@@ -52,7 +52,7 @@ public class WheelSlice {
         this.broadcastMessage = broadcastMessage;
         this.title = title;
         this.subtitle = subtitle;
-        this.sound = sound;
+        this.sound = sound != null && !sound.isBlank() ? sound : "ENTITY_PLAYER_LEVELUP";
         this.messages = messages != null ? new ArrayList<>(messages) : new ArrayList<>();
         this.commands = commands != null ? new ArrayList<>(commands) : new ArrayList<>();
         this.rewardItems = rewardItems != null ? new ArrayList<>(rewardItems) : new ArrayList<>();
@@ -102,6 +102,13 @@ public class WheelSlice {
         this.sliceLabel = sliceLabel;
     }
 
+    public String getFormattedRewardSummary() {
+        if (sliceLabel != null && !sliceLabel.isBlank()) {
+            return sliceLabel.replace("\n", " ");
+        }
+        return displayName != null ? displayName : id;
+    }
+
     public double getChance() {
         return chance;
     }
@@ -122,8 +129,16 @@ public class WheelSlice {
         return broadcastMessage;
     }
 
+    public void setBroadcastMessage(String broadcastMessage) {
+        this.broadcastMessage = broadcastMessage;
+    }
+
     public String getTitle() {
         return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getSubtitle() {
@@ -138,8 +153,16 @@ public class WheelSlice {
         return sound;
     }
 
+    public void setSound(String sound) {
+        this.sound = sound;
+    }
+
     public List<String> getMessages() {
         return Collections.unmodifiableList(messages);
+    }
+
+    public void setMessages(List<String> messages) {
+        this.messages = messages != null ? new ArrayList<>(messages) : new ArrayList<>();
     }
 
     public List<String> getCommands() {

@@ -92,69 +92,57 @@ public class LanguageManager {
         cfg.set("messages.reloaded", "&aTkitsuneFortune configuration and all 3D wheels reloaded!");
 
         // Slices
+        String enSub = "&fReward: &r%reward%";
+        List<String> enMsgs = List.of("&aCongratulations! You won &r%reward% &afrom &r%slice%&a!");
+        String enBcast = "&6&l✦ &e%player% &7won &r%slice% &8(&r%reward%&8) &7from the Wheel of Fortune! &6&l✦";
+
         setSliceText(cfg, "red",
                 "&c&lRed Slice &8(&6&lJACKPOT&8)",
                 "&c&l16x Diamond\n&a&l+2 Emerald Block",
                 "&c&l✦ JACKPOT! ✦",
-                "&fReward: &c&l16x Diamond &7+ &a&l2x Emerald Block",
-                List.of("&aCongratulations! You won the &c&lRed Slice (JACKPOT) &areward!"),
-                "&6&l✦ &e%player% &7won the &c&lJACKPOT (16x Diamond + 2x Emerald Block) &7from the Wheel of Fortune! &6&l✦");
+                enSub, enMsgs, enBcast);
 
         setSliceText(cfg, "orange",
                 "&6&lOrange Slice &8(&eGold Treasure&8)",
                 "&6&l32x Gold",
                 "&6&lCONGRATULATIONS!",
-                "&fReward: &632x Gold Ingot",
-                List.of("&aCongratulations! You won &e32x Gold Ingot &afrom the &6&lOrange Slice&a!"),
-                null);
+                enSub, enMsgs, enBcast);
 
         setSliceText(cfg, "yellow",
                 "&e&lYellow Slice &8(&eEnchanted Golden Apple&8)",
                 "&e&lEnchanted Apple",
                 "&e&lLUCKY SPIN!",
-                "&fReward: &d1x Enchanted Golden Apple",
-                List.of("&aCongratulations! You won &d1x Enchanted Golden Apple &afrom the &e&lYellow Slice&a!"),
-                "&6&l✦ &e%player% &7won an &e&lEnchanted Golden Apple &7from the Wheel of Fortune!");
+                enSub, enMsgs, enBcast);
 
         setSliceText(cfg, "green",
-                "&a&lGreen Slice &8(&aEmerald Pack&8)",
-                "&a&l16x Emerald",
+                "&a&lGreen Slice &8(&aNetherite Sword&8)",
+                "&a&l1x Netherite Sword",
                 "&a&lYOU WON!",
-                "&fReward: &a16x Emerald",
-                List.of("&aCongratulations! You won &216x Emerald &afrom the &a&lGreen Slice&a!"),
-                null);
+                enSub, enMsgs, enBcast);
 
         setSliceText(cfg, "cyan",
                 "&b&lCyan Slice &8(&bDiamond Pack&8)",
                 "&b&l8x Diamond",
                 "&b&lAWESOME!",
-                "&fReward: &b8x Diamond",
-                List.of("&aCongratulations! You won &b8x Diamond &afrom the &b&lCyan Slice&a!"),
-                null);
+                enSub, enMsgs, enBcast);
 
         setSliceText(cfg, "blue",
                 "&9&lBlue Slice &8(&9XP Bottle Pack&8)",
                 "&9&l32x XP Bottle",
                 "&9&lCONGRATULATIONS!",
-                "&fReward: &932x Bottle o' Enchanting",
-                List.of("&aCongratulations! You won &b32x Bottle o' Enchanting &afrom the &9&lBlue Slice&a!"),
-                null);
+                enSub, enMsgs, enBcast);
 
         setSliceText(cfg, "purple",
                 "&5&lPurple Slice &8(&5Netherite Scrap&8)",
                 "&5&l2x Netherite",
                 "&5&lLEGENDARY!",
-                "&fReward: &52x Netherite Scrap",
-                List.of("&aCongratulations! You won &d2x Netherite Scrap &afrom the &5&lPurple Slice&a!"),
-                "&6&l✦ &e%player% &7won &5&l2x Netherite Scrap &7from the Wheel of Fortune!");
+                enSub, enMsgs, enBcast);
 
         setSliceText(cfg, "magenta",
                 "&d&lMagenta Slice &8(&dFree Respin Ticket&8)",
                 "&d&l1x Ticket\n&f&l+16x Iron",
                 "&d&lSPIN AGAIN!",
-                "&fReward: &e1x Fortune Wheel Ticket + 16x Iron",
-                List.of("&aCongratulations! You won &e1x Fortune Wheel Ticket &aand &f16x Iron &afrom the &d&lMagenta Slice&a!"),
-                null);
+                enSub, enMsgs, enBcast);
     }
 
     private void applyTurkishDefaults(FileConfiguration cfg) {
@@ -197,69 +185,57 @@ public class LanguageManager {
         cfg.set("messages.reloaded", "&aTkitsuneFortune yapılandırması ve tüm 3D çarklar başarıyla yeniden yüklendi!");
 
         // Slices
+        String trSub = "&fKazandığın ödül: &r%reward%";
+        List<String> trMsgs = List.of("&aTebrikler! &r%slice% &aödülü olarak &r%reward% &akazandın!");
+        String trBcast = "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦";
+
         setSliceText(cfg, "red",
                 "&c&lKırmızı Dilim &8(&6&lJACKPOT&8)",
                 "&c&l16x Elmas\n&a&l+2 Zümrüt Blok",
                 "&c&l✦ JACKPOT! ✦",
-                "&fKazandığın ödül: &c&l16x Elmas &7+ &a&l2x Zümrüt Blok",
-                List.of("&aTebrikler! &c&lKırmızı Dilim (JACKPOT) &aödülünü kazandın!"),
-                "&6&l✦ &e%player% &7Şans Çarkından &c&lJACKPOT (16x Elmas + 2x Zümrüt Blok) &7kazandı! &6&l✦");
+                trSub, trMsgs, trBcast);
 
         setSliceText(cfg, "orange",
                 "&6&lTuruncu Dilim &8(&eAltın Hazinesi&8)",
                 "&6&l32x Altın",
                 "&6&lTEBRİKLER!",
-                "&fKazandığın ödül: &632x Altın Külçesi",
-                List.of("&aTebrikler! &6&lTuruncu Dilim &aödülü olarak &e32x Altın Külçesi &akazandın!"),
-                null);
+                trSub, trMsgs, trBcast);
 
         setSliceText(cfg, "yellow",
                 "&e&lSarı Dilim &8(&eBüyülü Altın Elma&8)",
                 "&e&lBüyülü Elma",
                 "&e&lŞANSLISIN!",
-                "&fKazandığın ödül: &d1x Büyülü Altın Elma",
-                List.of("&aTebrikler! &e&lSarı Dilim &aödülü olarak &d1x Büyülü Altın Elma &akazandın!"),
-                "&6&l✦ &e%player% &7Şans Çarkından &e&lBüyülü Altın Elma &7kazandı!");
+                trSub, trMsgs, trBcast);
 
         setSliceText(cfg, "green",
-                "&a&lYeşil Dilim &8(&aZümrüt Paketi&8)",
-                "&a&l16x Zümrüt",
+                "&a&lYeşil Dilim &8(&aNetherite Kılıcı&8)",
+                "&a&l1x Netherite Kılıcı",
                 "&a&lKAZANDIN!",
-                "&fKazandığın ödül: &a16x Zümrüt",
-                List.of("&aTebrikler! &a&lYeşil Dilim &aödülü olarak &216x Zümrüt &akazandın!"),
-                null);
+                trSub, trMsgs, trBcast);
 
         setSliceText(cfg, "cyan",
                 "&b&lTurkuaz Dilim &8(&bElmas Paketi&8)",
                 "&b&l8x Elmas",
                 "&b&lHARİKA!",
-                "&fKazandığın ödül: &b8x Elmas",
-                List.of("&aTebrikler! &b&lTurkuaz Dilim &aödülü olarak &b8x Elmas &akazandın!"),
-                null);
+                trSub, trMsgs, trBcast);
 
         setSliceText(cfg, "blue",
                 "&9&lMavi Dilim &8(&9Tecrübe İksiri&8)",
                 "&9&l32x XP Şişesi",
                 "&9&lTEBRİKLER!",
-                "&fKazandığın ödül: &932x Tecrübe Şişesi",
-                List.of("&aTebrikler! &9&lMavi Dilim &aödülü olarak &b32x Tecrübe Şişesi &akazandın!"),
-                null);
+                trSub, trMsgs, trBcast);
 
         setSliceText(cfg, "purple",
                 "&5&lMor Dilim &8(&5Netherite Hurdası&8)",
                 "&5&l2x Netherite",
                 "&5&lEFSANEVİ!",
-                "&fKazandığın ödül: &52x Netherite Hurdası",
-                List.of("&aTebrikler! &5&lMor Dilim &aödülü olarak &d2x Netherite Hurdası &akazandın!"),
-                "&6&l✦ &e%player% &7Şans Çarkından &5&l2x Netherite Hurdası &7kazandı!");
+                trSub, trMsgs, trBcast);
 
         setSliceText(cfg, "magenta",
                 "&d&lPembe Dilim &8(&dÜcretsiz Tekrar Bileti&8)",
                 "&d&l1x Bilet\n&f&l+16x Demir",
                 "&d&lTEKRAR ÇEVİR!",
-                "&fKazandığın ödül: &e1x Şans Çarkı Bileti + 16x Demir",
-                List.of("&aTebrikler! &d&lPembe Dilim &aödülü olarak &e1x Şans Çarkı Bileti &ave &f16x Demir &akazandın!"),
-                null);
+                trSub, trMsgs, trBcast);
     }
 
     private void setSliceText(

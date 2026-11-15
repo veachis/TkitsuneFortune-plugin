@@ -188,7 +188,7 @@ public class WheelManager {
             String msg = plugin.getConfig().getString("messages.wheel-busy", "&cBu Şans Çarkı şu anda dönüyor!")
                     .replace("%spinner%", wheel.getCurrentSpinnerName());
             player.sendMessage(prefix + ColorUtil.colorize(msg));
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
+            playPlayerSound(player, plugin.getConfig().getString("settings.sounds.error", "BLOCK_NOTE_BLOCK_BASS"), 0.8f, 0.7f);
             return;
         }
 
@@ -196,7 +196,7 @@ public class WheelManager {
         if (!plugin.getTicketManager().consumeTicket(player, requireInHand)) {
             String key = requireInHand ? "messages.no-ticket-in-hand" : "messages.no-ticket";
             player.sendMessage(prefix + ColorUtil.colorize(plugin.getConfig().getString(key)));
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
+            playPlayerSound(player, plugin.getConfig().getString("settings.sounds.error", "BLOCK_NOTE_BLOCK_BASS"), 0.8f, 0.7f);
             return;
         }
 
@@ -207,7 +207,7 @@ public class WheelManager {
 
         wheel.setSpinning(true, player.getName());
         player.sendMessage(prefix + ColorUtil.colorize(plugin.getConfig().getString("messages.spin-started")));
-        player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.3f);
+        playPlayerSound(player, plugin.getConfig().getString("settings.sounds.spin-start", "BLOCK_AMETHYST_BLOCK_CHIME"), 1.0f, 1.3f);
 
         int durationTicks = plugin.getConfig().getInt("settings.spin-duration-ticks", 120);
         int minRot = plugin.getConfig().getInt("settings.min-full-rotations", 5);
@@ -268,7 +268,10 @@ public class WheelManager {
                         ticketDisplay.remove();
                     }
                     world.spawnParticle(Particle.END_ROD, centerLoc, 15, 0.25, 0.25, 0.25, 0.06);
-                    world.playSound(centerLoc, Sound.BLOCK_BEACON_ACTIVATE, 0.9f, 1.45f);
+                    if (plugin.getConfig().getBoolean("settings.sounds.enabled", true)) {
+                        String startSnd = plugin.getConfig().getString("settings.sounds.spin-start", "BLOCK_BEACON_ACTIVATE");
+                        playWorldSound(world, centerLoc, startSnd, 0.9f, 1.45f);
+                    }
                     SpinTask task = new SpinTask(plugin, wheel, player, winningSlice, durationTicks, minRot, maxRot);
                     task.runTaskTimer(plugin, 1L, 1L);
                     cancel();
@@ -352,6 +355,44 @@ public class WheelManager {
 
     public Collection<FortuneWheel> getWheels() {
         return Collections.unmodifiableCollection(wheels.values());
+    }
+
+    public void playPlayerSound(Player player, String soundName, float baseVol, float pitch) {
+        if (player == null || !plugin.getConfig().getBoolean("settings.sounds.enabled", true)) {
+            return;
+        }
+        if (soundName == null || soundName.isBlank() || soundName.equalsIgnoreCase("NONE")) {
+            return;
+        }
+        float volMult = (float) plugin.getConfig().getDouble("settings.sounds.volume", 1.0);
+        try {
+            Sound sound = Sound.valueOf(soundName.toUpperCase());
+            player.playSound(player.getLocation(), sound, Math.max(0.0f, baseVol * volMult), pitch);
+        } catch (IllegalArgumentException ignored) {
+            try {
+                player.playSound(player.getLocation(), soundName.toLowerCase(), Math.max(0.0f, baseVol * volMult), pitch);
+            } catch (Throwable ignored2) {
+            }
+        }
+    }
+
+    public void playWorldSound(World world, Location loc, String soundName, float baseVol, float pitch) {
+        if (world == null || loc == null || !plugin.getConfig().getBoolean("settings.sounds.enabled", true)) {
+            return;
+        }
+        if (soundName == null || soundName.isBlank() || soundName.equalsIgnoreCase("NONE")) {
+            return;
+        }
+        float volMult = (float) plugin.getConfig().getDouble("settings.sounds.volume", 1.0);
+        try {
+            Sound sound = Sound.valueOf(soundName.toUpperCase());
+            world.playSound(loc, sound, Math.max(0.0f, baseVol * volMult), pitch);
+        } catch (IllegalArgumentException ignored) {
+            try {
+                world.playSound(loc, soundName.toLowerCase(), Math.max(0.0f, baseVol * volMult), pitch);
+            } catch (Throwable ignored2) {
+            }
+        }
     }
 }
 

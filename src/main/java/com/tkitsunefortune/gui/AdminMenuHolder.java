@@ -8,7 +8,8 @@ public class AdminMenuHolder implements InventoryHolder {
     public enum MenuType {
         MAIN,
         SLICE_EDITOR,
-        HOLOGRAM_EDITOR
+        HOLOGRAM_EDITOR,
+        SOUND_EDITOR
     }
 
     private final MenuType menuType;

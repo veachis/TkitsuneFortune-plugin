@@ -25,18 +25,29 @@ public class AdminMenuManager {
         CHANCE,
         SLICE_LABEL,
         DISPLAY_NAME,
+        SLICE_TITLE,
         ADD_COMMAND,
+        SLICE_SOUND,
         HOLOGRAM_TITLE,
         HOLOGRAM_ADD_IDLE_LINE,
         HOLOGRAM_SET_IDLE_LINES,
         HOLOGRAM_ADD_SPIN_LINE,
-        HOLOGRAM_SET_SPIN_LINES
+        HOLOGRAM_SET_SPIN_LINES,
+        TICKET_NAME,
+        TICKET_LORE,
+        SOUND_SPIN_START,
+        SOUND_SPIN_TICK,
+        SOUND_WIN,
+        SOUND_ERROR
     }
 
     public record PendingChatEdit(String sliceId, ChatEditType type) {
     }
 
-    public static final int[] MAIN_SLICE_SLOTS = {10, 11, 12, 13, 14, 15, 16, 22};
+    // Symmetrical 2x4 grid for the 8 slices in Main Menu (Cols 2,3 and 5,6 on Rows 1 & 2)
+    public static final int[] MAIN_SLICE_SLOTS = {11, 12, 14, 15, 20, 21, 23, 24};
+    // Symmetrical 2x4 grid for the 8 slices in Sound Editor Menu (Cols 2,3 and 5,6 on Rows 3 & 4)
+    public static final int[] SOUND_SLICE_SLOTS = {29, 30, 32, 33, 38, 39, 41, 42};
     public static final int PRIZE_SLOT_START = 27;
     public static final int PRIZE_SLOT_END = 35;
 
@@ -63,7 +74,7 @@ public class AdminMenuManager {
             inv.setItem(i, glass);
         }
 
-        // Top header info
+        // Top header info (Row 0, Col 4 - Center)
         inv.setItem(4, createButton(
                 Material.NETHER_STAR,
                 tr("&6&l✦ &e&lTkitsune Şans Çarkı Ayarları &6&l✦", "&6&l✦ &e&lTkitsune Wheel of Fortune Settings &6&l✦"),
@@ -74,7 +85,7 @@ public class AdminMenuManager {
                 tr("&e▸ &fBir dilimi düzenlemek için üzerine &aSol Tıklayın!", "&e▸ &aLeft-Click &fany slice to edit its prizes & chance!")
         ));
 
-        // 8 Wheel Slices
+        // 8 Wheel Slices in symmetrical 2x4 layout (11,12, 14,15 and 20,21, 23,24)
         List<WheelSlice> slices = plugin.getSliceManager().getSlices();
         for (int i = 0; i < slices.size() && i < MAIN_SLICE_SLOTS.length; i++) {
             WheelSlice slice = slices.get(i);
@@ -82,14 +93,20 @@ public class AdminMenuManager {
             inv.setItem(slot, createMainSliceItem(slice));
         }
 
-        // Bottom control buttons
+        // Bottom control buttons:
+        // Row 4: Slots 37..43 (7 buttons, Cols 1..7)
+        // Row 5: Slots 46..52 (7 buttons, Cols 1..7)
         double scale = plugin.getConfig().getDouble("settings.scale", 1.7);
         int spinTicks = plugin.getConfig().getInt("settings.spin-duration-ticks", 120);
         String renderMode = plugin.getConfig().getString("settings.render-mode", "RESOURCE_PACK");
         boolean showPrizes = plugin.getConfig().getBoolean("settings.show-slice-prizes", true);
         boolean requireHand = plugin.getConfig().getBoolean("settings.require-ticket-in-hand", true);
+        boolean soundsEnabled = plugin.getConfig().getBoolean("settings.sounds.enabled", true);
+        boolean ticketGlow = plugin.getConfig().getBoolean("ticket.glow", false);
+        String ticketName = plugin.getTicketManager().getTicketName();
         boolean en = plugin.isEnglish();
 
+        // --- ROW 4 (Slots 37..43) ---
         inv.setItem(37, createButton(
                 Material.GOLD_BLOCK,
                 tr("&a&l✚ Baktığın Yere Çark Kur", "&a&l✚ Place Wheel Here"),
@@ -165,6 +182,7 @@ public class AdminMenuManager {
                 tr("&e▸ Değiştirmek için Tıkla!", "&e▸ Click to Toggle!")
         ));
 
+        // --- ROW 5 (Slots 46..52) ---
         inv.setItem(46, createButton(
                 Material.RECOVERY_COMPASS,
                 "&b&l🌐 Dil / Language: " + (en ? "&a&lEnglish (EN)" : "&e&lTürkçe (TR)"),
@@ -192,13 +210,14 @@ public class AdminMenuManager {
         ));
 
         inv.setItem(48, createButton(
-                requireHand ? Material.TRIPWIRE_HOOK : Material.CHEST,
-                tr("&e&l✦ Bilet Kullanım Şekli: ", "&e&l✦ Ticket Requirement: ")
-                        + (requireHand ? tr("&6Elinde Tutmalı", "&6Must Hold in Hand") : tr("&aEnvanterde Yeterli", "&aAnywhere in Inventory")),
-                tr("&7Oyuncunun çarkı çevirirken bileti elinde", "&7Determines whether players must hold the ticket"),
-                tr("&7tutmasının zorunlu olup olmadığını belirler.", "&7in their hand or just have it in their inventory."),
+                Material.NOTE_BLOCK,
+                tr("&d&l🔊 Çark Ses Ayarları", "&d&l🔊 Wheel Sound Settings"),
+                tr("&7Ses Durumu: ", "&7Sound Status: ") + (soundsEnabled ? tr("&aAçık", "&aEnabled") : tr("&cKapalı", "&cMuted")),
+                tr("&7Çarkın dönüş tıkırtı sesini, başlangıç,", "&7Customize the wheel's tick sound, spin start,"),
+                tr("&7kazanma ve dilim seslerini özelleştirin!", "&7win fanfare, and per-slice sounds!"),
                 "",
-                tr("&e▸ Değiştirmek için Tıkla!", "&e▸ Click to Toggle!")
+                tr("&e▸ Sol Tık: &aSes Ayarları Menüsünü Aç", "&e▸ Left-Click: &aOpen Sound Settings Menu"),
+                tr("&e▸ Sağ Tık: &eSesleri Hızlı Aç / Kapat", "&e▸ Right-Click: &eQuick Toggle Sounds On / Off")
         ));
 
         inv.setItem(49, createButton(
@@ -211,12 +230,156 @@ public class AdminMenuManager {
         ));
 
         inv.setItem(50, createButton(
+                Material.WRITABLE_BOOK,
+                tr("&6&l🎫 Bilet İsmi & Açıklaması", "&6&l🎫 Ticket Name & Lore"),
+                tr("&7Mevcut Bilet İsmi:", "&7Current Ticket Name:"),
+                "  &r" + ticketName,
+                tr("&7Parlama (Glow): ", "&7Enchant Glow: ") + (ticketGlow ? tr("&aAçık", "&aEnabled") : tr("&7Kapalı", "&7Disabled")),
+                "",
+                tr("&e▸ Sol Tık: &aBilet İsmini Değiştir (Sohbetten)", "&e▸ Left-Click: &aChange Ticket Name (via Chat)"),
+                tr("&e▸ Sağ Tık: &bBilet Açıklamasını (Lore) Değiştir", "&e▸ Right-Click: &bChange Ticket Lore (via Chat)"),
+                tr("&e▸ Shift + Sol Tık: &dParlama (Glow) Aç / Kapat", "&e▸ Shift + Left-Click: &dToggle Ticket Glow"),
+                tr("&e▸ Shift + Sağ Tık: &cVarsayılana Sıfırla", "&e▸ Shift + Right-Click: &cReset to Default")
+        ));
+
+        inv.setItem(51, createButton(
+                requireHand ? Material.TRIPWIRE_HOOK : Material.CHEST,
+                tr("&e&l✦ Bilet Kullanım Şekli: ", "&e&l✦ Ticket Requirement: ")
+                        + (requireHand ? tr("&6Elinde Tutmalı", "&6Must Hold in Hand") : tr("&aEnvanterde Yeterli", "&aAnywhere in Inventory")),
+                tr("&7Oyuncunun çarkı çevirirken bileti elinde", "&7Determines whether players must hold the ticket"),
+                tr("&7tutmasının zorunlu olup olmadığını belirler.", "&7in their hand or just have it in their inventory."),
+                "",
+                tr("&e▸ Değiştirmek için Tıkla!", "&e▸ Click to Toggle!")
+        ));
+
+        inv.setItem(52, createButton(
                 Material.BOOK,
                 tr("&b&l📦 Resource Pack Gönder", "&b&l📦 Send Resource Pack"),
                 tr("&7Özel 3D bilet ve çark doku paketini", "&7Regenerates the custom 3D wheel & ticket"),
                 tr("&7üretir ve sunucudaki oyunculara gönderir.", "&7resource pack and sends it to online players."),
                 "",
                 tr("&e▸ Göndermek için Tıkla!", "&e▸ Click to Send!")
+        ));
+
+        player.openInventory(inv);
+    }
+
+    public void openSoundEditor(Player player) {
+        AdminMenuHolder holder = new AdminMenuHolder(AdminMenuHolder.MenuType.SOUND_EDITOR, null);
+        Inventory inv = Bukkit.createInventory(holder, 54, ColorUtil.colorize(
+                tr("&8✦ &d&lÇARK SES AYARLARI &8✦", "&8✦ &d&lWHEEL SOUND SETTINGS &8✦")
+        ));
+        holder.setInventory(inv);
+
+        ItemStack glass = createButton(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 54; i++) {
+            inv.setItem(i, glass);
+        }
+
+        boolean enabled = plugin.getConfig().getBoolean("settings.sounds.enabled", true);
+        double volume = plugin.getConfig().getDouble("settings.sounds.volume", 1.0);
+        String spinStart = plugin.getConfig().getString("settings.sounds.spin-start", "BLOCK_AMETHYST_BLOCK_CHIME");
+        String spinTick = plugin.getConfig().getString("settings.sounds.spin-tick", "BLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON");
+        String winDefault = plugin.getConfig().getString("settings.sounds.win-default", "ENTITY_PLAYER_LEVELUP");
+        String errorSound = plugin.getConfig().getString("settings.sounds.error", "BLOCK_NOTE_BLOCK_BASS");
+
+        inv.setItem(4, createButton(
+                enabled ? Material.LIME_DYE : Material.GRAY_DYE,
+                tr("&6&l🔊 Tüm Çark Sesleri: ", "&6&l🔊 All Wheel Sounds: ") + (enabled ? tr("&a&lAÇIK", "&a&lENABLED") : tr("&c&lKAPALI", "&c&lMUTED")),
+                tr("&7Çarkın tüm ses efektlerini tek tıkla", "&7Turns all wheel sound effects"),
+                tr("&7açar veya tamamen sessize alır.", "&7ON or OFF."),
+                "",
+                tr("&e▸ Tıkla: ", "&e▸ Click: ") + (enabled ? tr("&cSesleri Kapat", "&cMute All Sounds") : tr("&aSesleri Aç", "&aEnable All Sounds"))
+        ));
+
+        // Row 1: Symmetrical 5 sound buttons in Slots 11, 12, 13, 14, 15 (Cols 2..6)
+        inv.setItem(11, createButton(
+                Material.AMETHYST_SHARD,
+                tr("&b&l🎵 Çark Başlangıç Sesi", "&b&l🎵 Spin Start Sound"),
+                tr("&7Mevcut Ses: &e", "&7Current Sound: &e") + spinStart,
+                tr("&7Oyuncu biletle çarka tıkladığında", "&7Played when a player inserts a ticket"),
+                tr("&7ve çark dönmeye başladığında çalar.", "&7and starts spinning the wheel."),
+                "",
+                tr("&e▸ Sol Tık: &aHazır Sesler Arasında Geçiş Yap & Dinle", "&e▸ Left-Click: &aCycle Preset Sounds & Preview"),
+                tr("&e▸ Sağ Tık: &bSohbetten Özel Ses Adı Yaz", "&e▸ Right-Click: &bType Custom Sound Name in Chat")
+        ));
+
+        inv.setItem(12, createButton(
+                Material.BAMBOO_BUTTON,
+                tr("&e&l🥁 Dönüş Tıkırtı Sesi (Tick)", "&e&l🥁 Spin Tick / Click Sound"),
+                tr("&7Mevcut Ses: &e", "&7Current Sound: &e") + spinTick,
+                tr("&7Çark dönerken ibre her dilimden", "&7Played every time the pointer passes"),
+                tr("&7geçtiğinde çıkan tıkırtı sesi.", "&7a slice while spinning."),
+                "",
+                tr("&e▸ Sol Tık: &aHazır Sesler Arasında Geçiş Yap & Dinle", "&e▸ Left-Click: &aCycle Preset Sounds & Preview"),
+                tr("&e▸ Sağ Tık: &bSohbetten Özel Ses Adı Yaz", "&e▸ Right-Click: &bType Custom Sound Name in Chat")
+        ));
+
+        inv.setItem(13, createButton(
+                Material.GOAT_HORN,
+                tr("&a&l🔉 Ses Seviyesi (Volume): &e", "&a&l🔉 Sound Volume: &e") + String.format(Locale.US, "%d%%", Math.round(volume * 100)),
+                tr("&7Çark seslerinin yüksekliğini ayarlar.", "&7Adjusts the master volume of wheel sounds."),
+                "",
+                tr("&e▸ Sol Tık: &a+%10 Artır", "&e▸ Left-Click: &a+10% Volume"),
+                tr("&e▸ Sağ Tık: &c-%10 Azalt", "&e▸ Right-Click: &c-10% Volume"),
+                tr("&e▸ Shift + Sağ Tık: &e%100 (Varsayılan)", "&e▸ Shift + Right-Click: &e100% (Default)")
+        ));
+
+        inv.setItem(14, createButton(
+                Material.BELL,
+                tr("&6&l🏆 Genel Kazanma Sesi", "&6&l🏆 Default Win Sound"),
+                tr("&7Mevcut Ses: &e", "&7Current Sound: &e") + winDefault,
+                tr("&7Çark durduğunda çalan varsayılan", "&7Default fanfare sound played when"),
+                tr("&7ödül kazanma sesi.", "&7the wheel stops on a prize."),
+                "",
+                tr("&e▸ Sol Tık: &aHazır Sesler Arasında Geçiş Yap & Dinle", "&e▸ Left-Click: &aCycle Preset Sounds & Preview"),
+                tr("&e▸ Sağ Tık: &bSohbetten Özel Ses Adı Yaz", "&e▸ Right-Click: &bType Custom Sound Name in Chat"),
+                tr("&e▸ Shift + Sol Tık: &dBu Sesi Tüm 8 Dilime Uygula", "&e▸ Shift + Left-Click: &dApply This Sound to All 8 Slices")
+        ));
+
+        inv.setItem(15, createButton(
+                Material.NOTE_BLOCK,
+                tr("&c&l⚠ Uyarı / Hata Sesi", "&c&l⚠ Error / Busy Sound"),
+                tr("&7Mevcut Ses: &e", "&7Current Sound: &e") + errorSound,
+                tr("&7Oyuncunun bileti yokken veya çark", "&7Played when the player lacks a ticket"),
+                tr("&7meşgulken tıkladığında çalar.", "&7or the wheel is already spinning."),
+                "",
+                tr("&e▸ Sol Tık: &aHazır Sesler Arasında Geçiş Yap & Dinle", "&e▸ Left-Click: &aCycle Preset Sounds & Preview"),
+                tr("&e▸ Sağ Tık: &bSohbetten Özel Ses Adı Yaz", "&e▸ Right-Click: &bType Custom Sound Name in Chat")
+        ));
+
+        inv.setItem(22, createButton(
+                Material.JUKEBOX,
+                tr("&6&l✦ Dilimlere Özel Kazanma Sesleri (8 Dilim) ✦", "&6&l✦ Per-Slice Win Sounds (8 Slices) ✦"),
+                tr("&7Aşağıdaki dilimlere tıklayarak her dilimin", "&7Click any slice below to customize its"),
+                tr("&7kazanıldığında çalacağı sesi ayrı ayrı seçebilirsiniz!", "&7individual win sound!")
+        ));
+
+        // Rows 3 & 4: Symmetrical 2x4 grid (29,30, 32,33 and 38,39, 41,42)
+        List<WheelSlice> slices = plugin.getSliceManager().getSlices();
+        for (int i = 0; i < slices.size() && i < SOUND_SLICE_SLOTS.length; i++) {
+            WheelSlice slice = slices.get(i);
+            ItemStack icon = plugin.getSliceManager().createSliceIconItem(slice);
+            ItemMeta meta = icon.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(ColorUtil.colorize(slice.getDisplayName()));
+                meta.setLore(ColorUtil.colorize(Arrays.asList(
+                        tr("&7Ödül: &f", "&7Reward: &f") + slice.getFormattedRewardSummary(),
+                        tr("&7Kazanma Sesi: &e", "&7Win Sound: &e") + slice.getSound(),
+                        "",
+                        tr("&e▸ Sol Tık: &aSesi Değiştir & Dinle", "&e▸ Left-Click: &aCycle Sound & Preview"),
+                        tr("&e▸ Sağ Tık: &bSohbetten Özel Ses Yaz", "&e▸ Right-Click: &bType Custom Sound in Chat")
+                )));
+                meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                icon.setItemMeta(meta);
+            }
+            inv.setItem(SOUND_SLICE_SLOTS[i], icon);
+        }
+
+        inv.setItem(49, createButton(
+                Material.ARROW,
+                tr("&e&l« Ana Menüye Dön", "&e&l« Back to Main Menu"),
+                tr("&7Çark yönetim menüsüne geri döner.", "&7Return to the main wheel admin menu.")
         ));
 
         player.openInventory(inv);
@@ -435,6 +598,7 @@ public class AdminMenuManager {
                     + " &8(&a%" + String.format(Locale.US, "%.1f", pct) + tr(" İhtimal&8)", " Probability&8)"));
             lore.add(tr("&7Çark Üstü Yazı: &f", "&7Wheel Label: &f") + slice.getSliceLabel().replace("\n", " "));
             lore.add(tr("&7Duyuru (Broadcast): ", "&7Broadcast: ") + (slice.isBroadcast() ? tr("&aAçık", "&aEnabled") : tr("&cKapalı", "&cDisabled")));
+            lore.add(tr("&7Kazanma Sesi: &e", "&7Win Sound: &e") + slice.getSound());
             lore.add(tr("&7Eşya Ödülü Sayısı: &b", "&7Item Rewards: &b") + slice.getRewardItems().size() + tr(" Eşya", " Items"));
             lore.add(tr("&7Komut Ödülü Sayısı: &d", "&7Command Rewards: &d") + slice.getCommands().size() + tr(" Komut", " Commands"));
             if (!slice.getCommands().isEmpty()) {
@@ -498,7 +662,7 @@ public class AdminMenuManager {
             }
         }
 
-        // Row 1: Chance controls (Slots 10..16)
+        // Row 1: Chance controls (Slots 10..16, Cols 1..7)
         double pct = plugin.getSliceManager().getChancePercentage(slice);
         inv.setItem(10, createButton(Material.RED_STAINED_GLASS_PANE, tr("&c&l-10.0 Şans Oranı", "&c&l-10.0 Chance"), tr("&7Şans ağırlığını 10 azaltır.", "&7Decreases chance weight by 10.")));
         inv.setItem(11, createButton(Material.ORANGE_STAINED_GLASS_PANE, tr("&6&l-5.0 Şans Oranı", "&6&l-5.0 Chance"), tr("&7Şans ağırlığını 5 azaltır.", "&7Decreases chance weight by 5.")));
@@ -528,7 +692,7 @@ public class AdminMenuManager {
         inv.setItem(15, createButton(Material.GREEN_STAINED_GLASS_PANE, tr("&2&l+5.0 Şans Oranı", "&2&l+5.0 Chance"), tr("&7Şans ağırlığını 5 artırır.", "&7Increases chance weight by 5.")));
         inv.setItem(16, createButton(Material.EMERALD_BLOCK, tr("&a&l+10.0 Şans Oranı", "&a&l+10.0 Chance"), tr("&7Şans ağırlığını 10 artırır.", "&7Increases chance weight by 10.")));
 
-        // Row 0: Slice Icon, Label, Name, Commands, Broadcast
+        // Row 0: Symmetrical 7 buttons in Slots 1..7 (Cols 1..7)
         ItemStack currentIcon = plugin.getSliceManager().createSliceIconItem(slice);
         ItemMeta iconMeta = currentIcon.getItemMeta();
         if (iconMeta != null) {
@@ -542,22 +706,32 @@ public class AdminMenuManager {
             )));
             currentIcon.setItemMeta(iconMeta);
         }
-        inv.setItem(2, currentIcon);
+        inv.setItem(1, currentIcon);
 
-        inv.setItem(3, createButton(
+        inv.setItem(2, createButton(
                 Material.NAME_TAG,
-                tr("&e&l✎ Çark Üstü Yazıyı Değiştir", "&e&l✎ Change On-Wheel Label"),
+                tr("&e&l✎ Çark Üstü Ödül Yazısı", "&e&l✎ On-Wheel Reward Label"),
                 tr("&7Şu anki yazı: &f", "&7Current label: &f") + slice.getSliceLabel().replace("\n", " "),
+                tr("&7(Duyuru ve ödül mesajlarında da bu yazı görünür)", "&7(Also shown as the reward name in broadcasts & messages)"),
                 "",
                 tr("&e▸ Sohbetten yeni yazı girmek için Tıkla!", "&e▸ Click to type a new label in chat!")
         ));
 
-        inv.setItem(4, createButton(
+        inv.setItem(3, createButton(
                 Material.OAK_SIGN,
-                tr("&6&l✎ Dilim Başlığını Değiştir", "&6&l✎ Change Slice Title"),
+                tr("&6&l✎ Dilim Başlığı (İsmi)", "&6&l✎ Slice Display Name"),
                 tr("&7Şu anki başlık: &f", "&7Current title: &f") + slice.getDisplayName(),
                 "",
                 tr("&e▸ Sohbetten yeni başlık girmek için Tıkla!", "&e▸ Click to type a new title in chat!")
+        ));
+
+        inv.setItem(4, createButton(
+                Material.PAINTING,
+                tr("&d&l✨ Ekran Başlığı (Title)", "&d&l✨ Screen Win Title"),
+                tr("&7Kazanınca ekrana gelen büyük yazı:", "&7Big title shown on screen when won:"),
+                "  &r" + slice.getTitle(),
+                "",
+                tr("&e▸ Değiştirmek için Tıkla!", "&e▸ Click to change via chat!")
         ));
 
         List<String> cmdLore = new ArrayList<>();
@@ -584,7 +758,16 @@ public class AdminMenuManager {
                 tr("&e▸ Değiştirmek için Tıkla!", "&e▸ Click to Toggle!")
         ));
 
-        // Bottom buttons: Back / Save
+        inv.setItem(7, createButton(
+                Material.NOTE_BLOCK,
+                tr("&d&l🔊 Kazanma Sesi: &e", "&d&l🔊 Win Sound: &e") + slice.getSound(),
+                tr("&7Bu dilim çıktığında çalacak özel ses.", "&7The sound played when this slice is won."),
+                "",
+                tr("&e▸ Sol Tık: &aHazır Sesler Arasında Geçiş Yap & Dinle", "&e▸ Left-Click: &aCycle Preset Sounds & Preview"),
+                tr("&e▸ Sağ Tık: &bSohbetten Özel Ses Adı Yaz", "&e▸ Right-Click: &bType Custom Sound Name in Chat")
+        ));
+
+        // Bottom buttons: Centered in Slots 48, 49, 50 (Cols 3, 4, 5)
         inv.setItem(48, createButton(
                 Material.ARROW,
                 tr("&e&l« Kaydet ve Ana Menüye Dön", "&e&l« Save & Return to Main Menu"),

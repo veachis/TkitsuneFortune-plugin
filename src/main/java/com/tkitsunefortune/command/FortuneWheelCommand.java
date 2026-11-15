@@ -25,7 +25,7 @@ import java.util.Map;
 public class FortuneWheelCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "menu", "place", "remove", "list", "ticket", "name", "isim", "hologram", "lang", "dil", "mode", "scale", "resourcepack", "reload", "help"
+            "menu", "place", "remove", "list", "ticket", "ticketname", "biletisim", "name", "isim", "hologram", "sound", "ses", "lang", "dil", "mode", "scale", "resourcepack", "reload", "help"
     );
 
     private final TKitsuneFortunePlugin plugin;
@@ -73,7 +73,9 @@ public class FortuneWheelCommand implements CommandExecutor, TabCompleter {
             case "remove", "delete", "sil" -> handleRemove(sender, args, prefix);
             case "list", "liste" -> handleList(sender, prefix);
             case "ticket", "bilet", "give" -> handleTicket(sender, args, prefix);
+            case "ticketname", "biletisim", "biletadi" -> handleTicketName(sender, args, prefix);
             case "name", "isim", "hologram", "baslik", "title" -> handleName(sender, args, prefix);
+            case "sound", "sounds", "ses", "sesler" -> handleSound(sender, args, prefix);
             case "lang", "language", "dil" -> handleLang(sender, args);
             case "mode", "mod" -> handleMode(sender, args, prefix);
             case "scale", "boyut" -> handleScale(sender, args, prefix);
@@ -82,6 +84,52 @@ public class FortuneWheelCommand implements CommandExecutor, TabCompleter {
             default -> sendHelp(sender, "tkf");
         }
         return true;
+    }
+
+    private void handleTicketName(CommandSender sender, String[] args, String prefix) {
+        if (args.length < 2) {
+            sender.sendMessage(prefix + ColorUtil.colorize(tr(
+                    "&cKullanım: &e/tkf biletisim <yeni bilet ismi>",
+                    "&cUsage: &e/tkf ticketname <new ticket name>"
+            )));
+            return;
+        }
+        String newName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        plugin.getTicketManager().setTicketName(newName);
+        sender.sendMessage(prefix + ColorUtil.colorize(tr(
+                "&aBilet ismi güncellendi: &r",
+                "&aTicket name updated: &r"
+        ) + ColorUtil.colorize(plugin.getTicketManager().getTicketName())));
+    }
+
+    private void handleSound(CommandSender sender, String[] args, String prefix) {
+        if (args.length < 2) {
+            if (sender instanceof Player player) {
+                plugin.getAdminMenuManager().openSoundEditor(player);
+            } else {
+                sender.sendMessage(prefix + ColorUtil.colorize(tr(
+                        "&cKullanım: /tkf ses <ac|kapat|toggle>",
+                        "&cUsage: /tkf sound <on|off|toggle>"
+                )));
+            }
+            return;
+        }
+        String arg1 = args[1].toLowerCase(Locale.ROOT);
+        if (arg1.equals("menu") && sender instanceof Player player) {
+            plugin.getAdminMenuManager().openSoundEditor(player);
+            return;
+        }
+        boolean current = plugin.getConfig().getBoolean("settings.sounds.enabled", true);
+        boolean next = switch (arg1) {
+            case "ac", "aç", "on" -> true;
+            case "kapat", "off", "mute" -> false;
+            default -> !current;
+        };
+        plugin.getConfig().set("settings.sounds.enabled", next);
+        plugin.saveConfig();
+        sender.sendMessage(prefix + ColorUtil.colorize(next
+                ? tr("&aÇark sesleri &2AÇILDI&a!", "&aWheel sounds &2ENABLED&a!")
+                : tr("&cÇark sesleri &4KAPATILDI&c!", "&cWheel sounds &4MUTED&c!")));
     }
 
     private void handleLang(CommandSender sender, String[] args) {
@@ -355,7 +403,9 @@ public class FortuneWheelCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ColorUtil.colorize("&e/" + label + " remove [id|nearest] &8- " + tr("&7Şans Çarkını kaldırır", "&7Removes a Wheel of Fortune")));
         sender.sendMessage(ColorUtil.colorize("&e/" + label + " list &8- " + tr("&7Aktif Şans Çarklarını listeler", "&7Lists active Fortune Wheels")));
         sender.sendMessage(ColorUtil.colorize("&e/" + label + " ticket <player> [amount] &8- " + tr("&7Özel Şans Çarkı Bileti verir", "&7Gives Custom Fortune Wheel Tickets")));
+        sender.sendMessage(ColorUtil.colorize("&e/" + label + " biletisim <yeni isim> &8- " + tr("&7Bilet eşyasının ismini değiştirir", "&7Changes the ticket item name")));
         sender.sendMessage(ColorUtil.colorize("&e/" + label + " hologram [on|off|menu] &8- " + tr("&7Hologram Tasarım Menüsünü açar veya açıp kapatır", "&7Opens the Hologram Design Menu or toggles it")));
+        sender.sendMessage(ColorUtil.colorize("&e/" + label + " ses [ac|kapat|menu] &8- " + tr("&7Çark Ses Ayarları Menüsünü açar", "&7Opens the Wheel Sound Settings Menu")));
         sender.sendMessage(ColorUtil.colorize("&e/" + label + " name <title> &8- " + tr("&7Hologramdaki çark ismini değiştirir", "&7Changes the wheel hologram title")));
         sender.sendMessage(ColorUtil.colorize("&e/" + label + " lang <tr|en> &8- " + tr("&7Eklenti dilini değiştirir (TR / EN)", "&7Switches plugin language (TR / EN)")));
         sender.sendMessage(ColorUtil.colorize("&e/" + label + " mode <BLOCK_DISPLAY|RESOURCE_PACK> &8- " + tr("&73D modu değiştirir", "&7Changes 3D render mode")));
@@ -383,7 +433,7 @@ public class FortuneWheelCommand implements CommandExecutor, TabCompleter {
                 }
                 return filterPrefix(ids, args[1]);
             }
-            if (sub.equals("hologram")) {
+            if (sub.equals("hologram") || sub.equals("sound") || sub.equals("ses")) {
                 return filterPrefix(Arrays.asList("menu", "toggle", "on", "off", "ac", "kapat"), args[1]);
             }
             if (sub.equals("lang") || sub.equals("language") || sub.equals("dil")) {

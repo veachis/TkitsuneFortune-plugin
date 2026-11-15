@@ -30,6 +30,44 @@ import java.util.Map;
 
 public class AdminMenuListener implements Listener {
 
+    private static final List<String> START_SOUND_PRESETS = List.of(
+            "BLOCK_AMETHYST_BLOCK_CHIME",
+            "BLOCK_BEACON_ACTIVATE",
+            "BLOCK_ENCHANTMENT_TABLE_USE",
+            "BLOCK_END_PORTAL_FRAME_FILL",
+            "ENTITY_ILLUSIONER_PREPARE_MIRROR",
+            "BLOCK_BELL_USE",
+            "NONE");
+
+    private static final List<String> TICK_SOUND_PRESETS = List.of(
+            "BLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON",
+            "BLOCK_NOTE_BLOCK_HAT",
+            "UI_BUTTON_CLICK",
+            "BLOCK_TRIPWIRE_CLICK_ON",
+            "BLOCK_AMETHYST_CLUSTER_STEP",
+            "BLOCK_COPPER_BULB_TURN_ON",
+            "ENTITY_EXPERIENCE_ORB_PICKUP",
+            "BLOCK_NOTE_BLOCK_PLING",
+            "NONE");
+
+    private static final List<String> WIN_SOUND_PRESETS = List.of(
+            "ENTITY_PLAYER_LEVELUP",
+            "UI_TOAST_CHALLENGE_COMPLETE",
+            "ENTITY_FIREWORK_ROCKET_TWINKLE",
+            "ENTITY_EXPERIENCE_ORB_PICKUP",
+            "BLOCK_NOTE_BLOCK_CHIME",
+            "BLOCK_BELL_RESONATE",
+            "ENTITY_ALLAY_ITEM_GIVEN",
+            "ENTITY_ENDER_DRAGON_GROWL",
+            "NONE");
+
+    private static final List<String> ERROR_SOUND_PRESETS = List.of(
+            "BLOCK_NOTE_BLOCK_BASS",
+            "ENTITY_VILLAGER_NO",
+            "BLOCK_ANVIL_LAND",
+            "BLOCK_NOTE_BLOCK_DIDGERIDOO",
+            "NONE");
+
     private final TKitsuneFortunePlugin plugin;
 
     public AdminMenuListener(TKitsuneFortunePlugin plugin) {
@@ -62,6 +100,12 @@ public class AdminMenuListener implements Listener {
                 return;
             }
             handleHologramEditorClick(player, event.getSlot(), event.getClick());
+        } else if (holder.getMenuType() == AdminMenuHolder.MenuType.SOUND_EDITOR) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != topInv) {
+                return;
+            }
+            handleSoundEditorClick(player, event.getSlot(), event.getClick());
         } else if (holder.getMenuType() == AdminMenuHolder.MenuType.SLICE_EDITOR) {
             handleSliceEditorClick(player, holder, topInv, event);
         }
@@ -74,13 +118,14 @@ public class AdminMenuListener implements Listener {
             return;
         }
         if (holder.getMenuType() == AdminMenuHolder.MenuType.MAIN
-                || holder.getMenuType() == AdminMenuHolder.MenuType.HOLOGRAM_EDITOR) {
+                || holder.getMenuType() == AdminMenuHolder.MenuType.HOLOGRAM_EDITOR
+                || holder.getMenuType() == AdminMenuHolder.MenuType.SOUND_EDITOR) {
             event.setCancelled(true);
             return;
         }
-        // In SLICE_EDITOR, only allow dragging into slots 27..35 (or bottom player inventory)
         for (int rawSlot : event.getRawSlots()) {
-            if (rawSlot < topInv.getSize() && (rawSlot < AdminMenuManager.PRIZE_SLOT_START || rawSlot > AdminMenuManager.PRIZE_SLOT_END)) {
+            if (rawSlot < topInv.getSize()
+                    && (rawSlot < AdminMenuManager.PRIZE_SLOT_START || rawSlot > AdminMenuManager.PRIZE_SLOT_END)) {
                 event.setCancelled(true);
                 return;
             }
@@ -143,23 +188,20 @@ public class AdminMenuListener implements Listener {
                 player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f);
                 player.sendMessage(prefix + ColorUtil.colorize(tr(
                         "&a3D Tkitsune Şans Çarkı (&e#" + id + "&a) başarıyla kuruldu!",
-                        "&a3D Tkitsune Wheel of Fortune (&e#" + id + "&a) placed successfully!"
-                )));
+                        "&a3D Tkitsune Wheel of Fortune (&e#" + id + "&a) placed successfully!")));
             }
             case 38 -> { // Remove nearest wheel
                 FortuneWheel nearest = plugin.getWheelManager().findNearestWheel(player.getLocation(), 8.0);
                 if (nearest == null) {
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&cYakınınızda (8 blok içinde) kaldırılacak bir Şans Çarkı bulunamadı!",
-                            "&cNo Wheel of Fortune found within 8 blocks!"
-                    )));
+                            "&cNo Wheel of Fortune found within 8 blocks!")));
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
                 } else {
                     plugin.getWheelManager().removeWheel(nearest.getId());
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&cŞans Çarkı (&e#" + nearest.getId() + "&c) kaldırıldı.",
-                            "&cWheel of Fortune (&e#" + nearest.getId() + "&c) removed."
-                    )));
+                            "&cWheel of Fortune (&e#" + nearest.getId() + "&c) removed.")));
                     player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 0.8f, 1.0f);
                 }
             }
@@ -172,9 +214,10 @@ public class AdminMenuListener implements Listener {
                 }
                 player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.9f, 1.2f);
                 player.sendMessage(prefix + ColorUtil.colorize(tr(
-                        "&aEnvanterinize &e" + amount + "x Tkitsune Şans Çarkı Bileti &aeklendi!",
-                        "&aAdded &e" + amount + "x Tkitsune Fortune Wheel Ticket &ato your inventory!"
-                )));
+                        "&aEnvanterinize &e" + amount + "x " + plugin.getTicketManager().getTicketName()
+                                + " &aeklendi!",
+                        "&aAdded &e" + amount + "x " + plugin.getTicketManager().getTicketName()
+                                + " &ato your inventory!")));
             }
             case 40 -> { // Scale +/- 0.1
                 double current = plugin.getConfig().getDouble("settings.scale", 1.7);
@@ -196,8 +239,10 @@ public class AdminMenuListener implements Listener {
                 plugin.getAdminMenuManager().openMainMenu(player);
             }
             case 42 -> { // Toggle RenderMode
-                RenderMode current = RenderMode.fromString(plugin.getConfig().getString("settings.render-mode", "RESOURCE_PACK"));
-                RenderMode next = (current == RenderMode.BLOCK_DISPLAY) ? RenderMode.RESOURCE_PACK : RenderMode.BLOCK_DISPLAY;
+                RenderMode current = RenderMode
+                        .fromString(plugin.getConfig().getString("settings.render-mode", "RESOURCE_PACK"));
+                RenderMode next = (current == RenderMode.BLOCK_DISPLAY) ? RenderMode.RESOURCE_PACK
+                        : RenderMode.BLOCK_DISPLAY;
                 plugin.getConfig().set("settings.render-mode", next.name());
                 plugin.saveConfig();
                 plugin.getWheelManager().respawnAll();
@@ -216,12 +261,12 @@ public class AdminMenuListener implements Listener {
                 String nextLang = plugin.isEnglish() ? "TR" : "EN";
                 boolean translateAll = !click.isRightClick();
                 plugin.getLanguageManager().setLanguage(nextLang, translateAll);
-                String newPrefix = ColorUtil.colorize(plugin.getConfig().getString("messages.prefix", "&8[&6&lŞansÇarkı&8] &r"));
+                String newPrefix = ColorUtil
+                        .colorize(plugin.getConfig().getString("messages.prefix", "&8[&6&lŞansÇarkı&8] &r"));
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.3f);
                 player.sendMessage(newPrefix + ColorUtil.colorize(tr(
                         "&aDil &eTürkçe (TR) &aolarak değiştirildi!",
-                        "&aLanguage switched to &eEnglish (EN)&a!"
-                )));
+                        "&aLanguage switched to &eEnglish (EN)&a!")));
                 plugin.getAdminMenuManager().openMainMenu(player);
             }
             case 47 -> { // Hologram design editor / toggle
@@ -237,31 +282,255 @@ public class AdminMenuListener implements Listener {
                     plugin.getAdminMenuManager().openHologramEditor(player);
                 }
             }
-            case 48 -> { // Toggle require-ticket-in-hand
+            case 48 -> { // Wheel Sound Settings
+                if (click.isRightClick()) {
+                    boolean current = plugin.getConfig().getBoolean("settings.sounds.enabled", true);
+                    plugin.getConfig().set("settings.sounds.enabled", !current);
+                    plugin.saveConfig();
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
+                    plugin.getAdminMenuManager().openMainMenu(player);
+                } else {
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
+                    plugin.getAdminMenuManager().openSoundEditor(player);
+                }
+            }
+            case 49 -> { // Reload all (Center Column 4)
+                plugin.reloadPluginState();
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.3f);
+                player.sendMessage(prefix + ColorUtil.colorize(tr(
+                        "&aTüm ayarlar kaydedildi ve 3D Şans Çarkları yenilendi!",
+                        "&aAll settings saved and 3D Fortune Wheels reloaded!")));
+                plugin.getAdminMenuManager().openMainMenu(player);
+            }
+            case 50 -> { // Ticket Name & Lore Editor
+                if (click == ClickType.SHIFT_LEFT) {
+                    boolean glow = plugin.getConfig().getBoolean("ticket.glow", false);
+                    plugin.getConfig().set("ticket.glow", !glow);
+                    plugin.saveConfig();
+                    plugin.getTicketManager().refreshAllOnlinePlayerTickets();
+                    player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.8f, 1.3f);
+                    plugin.getAdminMenuManager().openMainMenu(player);
+                } else if (click == ClickType.SHIFT_RIGHT) {
+                    plugin.getTicketManager().setTicketName(tr(
+                            "&6&l✦ &e&lTkitsune Şans Çarkı Bileti &6&l✦",
+                            "&6&l✦ &e&lTkitsune Fortune Wheel Ticket &6&l✦"));
+                    plugin.getTicketManager().setTicketLore(trList(
+                            List.of(
+                                    "&8Özel Tasarım VIP Çark Bileti",
+                                    "",
+                                    "&7Bu özel işlemeli altın bileti elinde tutarak",
+                                    "&6Tkitsune Şans Çarkına &7sağ tıkla ve çevir!",
+                                    "",
+                                    "&e▸ &aElinde tutarak Şans Çarkına sağ tıkla!"),
+                            List.of(
+                                    "&8Custom VIP Fortune Wheel Ticket",
+                                    "",
+                                    "&7Hold this golden ticket in your hand and",
+                                    "&7right-click the &6Tkitsune Wheel of Fortune &7to spin!",
+                                    "",
+                                    "&e▸ &aHold in hand & Right-Click the Wheel!")));
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.9f, 1.3f);
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&aBilet ismi ve açıklaması varsayılana sıfırlandı!",
+                            "&aTicket name and lore reset to default!")));
+                    plugin.getAdminMenuManager().openMainMenu(player);
+                } else if (click.isRightClick()) {
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "MAIN",
+                            AdminMenuManager.ChatEditType.TICKET_LORE);
+                    player.closeInventory();
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&eBilet açıklamasının (lore) satırlarını aralarına &f| &ekoyarak sohbete yazın &7(İptal: &ciptal&7):",
+                            "&eType the ticket lore lines separated by &f| &ein chat &7(Cancel: &ccancel&7):")));
+                } else {
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "MAIN",
+                            AdminMenuManager.ChatEditType.TICKET_NAME);
+                    player.closeInventory();
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&eLütfen biletin yeni ismini sohbete yazın &7(Örn: &6&l✦ &e&lVIP Çark Bileti &6&l✦ &7veya &ciptal&7):",
+                            "&ePlease type the new ticket name in chat &7(e.g. &6&l✦ &e&lVIP Wheel Ticket &6&l✦ &7or &ccancel&7):")));
+                }
+            }
+            case 51 -> { // Toggle require-ticket-in-hand
                 boolean current = plugin.getConfig().getBoolean("settings.require-ticket-in-hand", true);
                 plugin.getConfig().set("settings.require-ticket-in-hand", !current);
                 plugin.saveConfig();
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
                 plugin.getAdminMenuManager().openMainMenu(player);
             }
-            case 49 -> { // Reload all
-                plugin.reloadPluginState();
-                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.3f);
-                player.sendMessage(prefix + ColorUtil.colorize(tr(
-                        "&aTüm ayarlar kaydedildi ve 3D Şans Çarkları yenilendi!",
-                        "&aAll settings saved and 3D Fortune Wheels reloaded!"
-                )));
-                plugin.getAdminMenuManager().openMainMenu(player);
-            }
-            case 50 -> { // Regenerate & send Resource Pack
+            case 52 -> { // Regenerate & send Resource Pack
                 File zip = plugin.getResourcePackGenerator().generateResourcePack();
                 plugin.getResourcePackHostServer().reloadPackCache(zip);
                 plugin.getResourcePackHostServer().sendToAllOnlinePlayers();
                 player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.9f, 1.2f);
                 player.sendMessage(prefix + ColorUtil.colorize(tr(
                         "&aResource Pack tüm oyunculara gönderildi!",
-                        "&aResource Pack sent to all online players!"
-                )));
+                        "&aResource Pack sent to all online players!")));
+            }
+        }
+    }
+
+    private List<String> trList(List<String> trList, List<String> enList) {
+        return plugin.isEnglish() ? enList : trList;
+    }
+
+    private void handleSoundEditorClick(Player player, int slot, ClickType click) {
+        String prefix = ColorUtil.colorize(plugin.getConfig().getString("messages.prefix", "&8[&6&lŞansÇarkı&8] &r"));
+        switch (slot) {
+            case 4 -> { // Toggle master sounds enabled
+                boolean current = plugin.getConfig().getBoolean("settings.sounds.enabled", true);
+                plugin.getConfig().set("settings.sounds.enabled", !current);
+                plugin.saveConfig();
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, !current ? 1.3f : 0.8f);
+                plugin.getAdminMenuManager().openSoundEditor(player);
+            }
+            case 11 -> { // Spin start sound
+                if (click.isRightClick()) {
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "SOUND",
+                            AdminMenuManager.ChatEditType.SOUND_SPIN_START);
+                    player.closeInventory();
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&eÇark başlangıç sesinin adını sohbete yazın &7(Örn: &fBLOCK_AMETHYST_BLOCK_CHIME &7veya &ciptal&7):",
+                            "&eType the spin start sound name in chat &7(e.g. &fBLOCK_AMETHYST_BLOCK_CHIME &7or &ccancel&7):")));
+                } else {
+                    String next = cyclePreset(
+                            plugin.getConfig().getString("settings.sounds.spin-start", "BLOCK_AMETHYST_BLOCK_CHIME"),
+                            START_SOUND_PRESETS);
+                    plugin.getConfig().set("settings.sounds.spin-start", next);
+                    plugin.saveConfig();
+                    previewSound(player, next);
+                    plugin.getAdminMenuManager().openSoundEditor(player);
+                }
+            }
+            case 12 -> { // Spin tick sound
+                if (click.isRightClick()) {
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "SOUND",
+                            AdminMenuManager.ChatEditType.SOUND_SPIN_TICK);
+                    player.closeInventory();
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&eÇark dönüş tıkırtı (tick) sesinin adını sohbete yazın &7(Örn: &fBLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON &7veya &ciptal&7):",
+                            "&eType the spin tick sound name in chat &7(e.g. &fBLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON &7or &ccancel&7):")));
+                } else {
+                    String next = cyclePreset(plugin.getConfig().getString("settings.sounds.spin-tick",
+                            "BLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON"), TICK_SOUND_PRESETS);
+                    plugin.getConfig().set("settings.sounds.spin-tick", next);
+                    plugin.saveConfig();
+                    previewSound(player, next);
+                    plugin.getAdminMenuManager().openSoundEditor(player);
+                }
+            }
+            case 13 -> { // Volume (Center Column 4)
+                double current = plugin.getConfig().getDouble("settings.sounds.volume", 1.0);
+                double next;
+                if (click == ClickType.SHIFT_RIGHT) {
+                    next = 1.0;
+                } else {
+                    double delta = click.isRightClick() ? -0.1 : 0.1;
+                    next = Math.max(0.1, Math.min(2.0, Math.round((current + delta) * 10.0) / 10.0));
+                }
+                plugin.getConfig().set("settings.sounds.volume", next);
+                plugin.saveConfig();
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, (float) next, 1.2f);
+                plugin.getAdminMenuManager().openSoundEditor(player);
+            }
+            case 14 -> { // Default win sound
+                if (click == ClickType.SHIFT_LEFT) {
+                    String winDefault = plugin.getConfig().getString("settings.sounds.win-default",
+                            "ENTITY_PLAYER_LEVELUP");
+                    for (WheelSlice s : plugin.getSliceManager().getSlices()) {
+                        s.setSound(winDefault);
+                        plugin.getSliceManager().saveSliceToConfig(s);
+                    }
+                    previewSound(player, winDefault);
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&aTüm 8 dilimin kazanma sesi &e" + winDefault + " &aolarak eşitlendi!",
+                            "&aApplied win sound &e" + winDefault + " &ato all 8 slices!")));
+                    plugin.getAdminMenuManager().openSoundEditor(player);
+                } else if (click.isRightClick()) {
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "SOUND",
+                            AdminMenuManager.ChatEditType.SOUND_WIN);
+                    player.closeInventory();
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&eGenel kazanma sesinin adını sohbete yazın &7(Örn: &fENTITY_PLAYER_LEVELUP &7veya &ciptal&7):",
+                            "&eType the default win sound name in chat &7(e.g. &fENTITY_PLAYER_LEVELUP &7or &ccancel&7):")));
+                } else {
+                    String next = cyclePreset(
+                            plugin.getConfig().getString("settings.sounds.win-default", "ENTITY_PLAYER_LEVELUP"),
+                            WIN_SOUND_PRESETS);
+                    plugin.getConfig().set("settings.sounds.win-default", next);
+                    plugin.saveConfig();
+                    previewSound(player, next);
+                    plugin.getAdminMenuManager().openSoundEditor(player);
+                }
+            }
+            case 15 -> { // Error sound
+                if (click.isRightClick()) {
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "SOUND",
+                            AdminMenuManager.ChatEditType.SOUND_ERROR);
+                    player.closeInventory();
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&eUyarı/hata sesinin adını sohbete yazın &7(Örn: &fBLOCK_NOTE_BLOCK_BASS &7veya &ciptal&7):",
+                            "&eType the error/busy sound name in chat &7(e.g. &fBLOCK_NOTE_BLOCK_BASS &7or &ccancel&7):")));
+                } else {
+                    String next = cyclePreset(
+                            plugin.getConfig().getString("settings.sounds.error", "BLOCK_NOTE_BLOCK_BASS"),
+                            ERROR_SOUND_PRESETS);
+                    plugin.getConfig().set("settings.sounds.error", next);
+                    plugin.saveConfig();
+                    previewSound(player, next);
+                    plugin.getAdminMenuManager().openSoundEditor(player);
+                }
+            }
+            case 49 -> {
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.1f);
+                plugin.getAdminMenuManager().openMainMenu(player);
+            }
+            default -> {
+                List<WheelSlice> slices = plugin.getSliceManager().getSlices();
+                for (int i = 0; i < slices.size() && i < AdminMenuManager.SOUND_SLICE_SLOTS.length; i++) {
+                    if (slot == AdminMenuManager.SOUND_SLICE_SLOTS[i]) {
+                        WheelSlice slice = slices.get(i);
+                        if (click.isRightClick()) {
+                            plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(),
+                                    "SOUND_MENU:" + slice.getId(), AdminMenuManager.ChatEditType.SLICE_SOUND);
+                            player.closeInventory();
+                            player.sendMessage(prefix + ColorUtil.colorize(tr(
+                                    "&e" + slice.getDisplayName()
+                                            + " &eiçin kazanma sesini sohbete yazın &7(Örn: &fUI_TOAST_CHALLENGE_COMPLETE &7veya &ciptal&7):",
+                                    "&eType the win sound for " + slice.getDisplayName()
+                                            + " &ein chat &7(e.g. &fUI_TOAST_CHALLENGE_COMPLETE &7or &ccancel&7):")));
+                        } else {
+                            String next = cyclePreset(slice.getSound(), WIN_SOUND_PRESETS);
+                            slice.setSound(next);
+                            plugin.getSliceManager().saveSliceToConfig(slice);
+                            previewSound(player, next);
+                            plugin.getAdminMenuManager().openSoundEditor(player);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private String cyclePreset(String current, List<String> presets) {
+        if (current == null) {
+            return presets.get(0);
+        }
+        int idx = presets.indexOf(current.toUpperCase(Locale.ROOT));
+        return presets.get((idx + 1) % presets.size());
+    }
+
+    private void previewSound(Player player, String soundName) {
+        if (soundName == null || soundName.isBlank() || soundName.equalsIgnoreCase("NONE")) {
+            return;
+        }
+        try {
+            Sound s = Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
+            player.playSound(player.getLocation(), s, 0.9f, 1.0f);
+        } catch (IllegalArgumentException ignored) {
+            try {
+                player.playSound(player.getLocation(), soundName.toLowerCase(Locale.ROOT), 0.9f, 1.0f);
+            } catch (Throwable ignored2) {
             }
         }
     }
@@ -284,21 +553,19 @@ public class AdminMenuListener implements Listener {
                 if (click.isRightClick()) {
                     plugin.getWheelManager().setHologramTitle(tr(
                             "&6&l✦ &e&lTkitsune Şans Çarkı &6&l✦",
-                            "&6&l✦ &e&lTkitsune Wheel of Fortune &6&l✦"
-                    ));
+                            "&6&l✦ &e&lTkitsune Wheel of Fortune &6&l✦"));
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.9f, 1.3f);
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&aÇark hologram başlığı varsayılana sıfırlandı!",
-                            "&aWheel hologram title reset to default!"
-                    )));
+                            "&aWheel hologram title reset to default!")));
                     plugin.getAdminMenuManager().openHologramEditor(player);
                 } else {
-                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM", AdminMenuManager.ChatEditType.HOLOGRAM_TITLE);
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM",
+                            AdminMenuManager.ChatEditType.HOLOGRAM_TITLE);
                     player.closeInventory();
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&eLütfen çarkın hologramda görünecek yeni başlığını sohbete yazın &7(Örn: &6&l✦ &e&lTkitsune Şans Çarkı &6&l✦ &7veya &ciptal&7):",
-                            "&ePlease type the new hologram title in chat &7(e.g. &6&l✦ &e&lTkitsune Wheel of Fortune &6&l✦ &7or &ccancel&7):"
-                    )));
+                            "&ePlease type the new hologram title in chat &7(e.g. &6&l✦ &e&lTkitsune Wheel of Fortune &6&l✦ &7or &ccancel&7):")));
                 }
             }
             case 11 -> { // Idle lines
@@ -307,35 +574,30 @@ public class AdminMenuListener implements Listener {
                     lines.add("%title%");
                     lines.add(tr(
                             "&7Elindeki &e&lÖzel Şans Çarkı Bileti &7ile &aSağ Tıkla!",
-                            "&7Right-Click with your &e&lFortune Wheel Ticket &7in hand!"
-                    ));
+                            "&7Right-Click with your &e&lFortune Wheel Ticket &7in hand!"));
                 }
                 if (click == ClickType.SHIFT_LEFT) {
-                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM", AdminMenuManager.ChatEditType.HOLOGRAM_SET_IDLE_LINES);
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM",
+                            AdminMenuManager.ChatEditType.HOLOGRAM_SET_IDLE_LINES);
                     player.closeInventory();
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&eBekleme hologramının tüm satırlarını aralarına &f| &ekoyarak sohbete yazın:",
-                            "&eType all idle hologram lines in chat separated by &f|&e:"
-                    )));
+                            "&eType all idle hologram lines in chat separated by &f|&e:")));
                     player.sendMessage(ColorUtil.colorize(tr(
                             "&7Örnek: &f%title% | &7Elindeki &e&lBilet &7ile &aSağ Tıkla! &7(İptal: &ciptal&7)",
-                            "&7Example: &f%title% | &7Right-Click with your &e&lTicket&7! &7(Cancel: &ccancel&7)"
-                    )));
+                            "&7Example: &f%title% | &7Right-Click with your &e&lTicket&7! &7(Cancel: &ccancel&7)")));
                 } else if (click == ClickType.SHIFT_RIGHT) {
                     plugin.getConfig().set("settings.hologram.idle-lines", List.of(
                             "%title%",
                             tr(
                                     "&7Elindeki &e&lÖzel Şans Çarkı Bileti &7ile &aSağ Tıkla!",
-                                    "&7Right-Click with your &e&lFortune Wheel Ticket &7in hand!"
-                            )
-                    ));
+                                    "&7Right-Click with your &e&lFortune Wheel Ticket &7in hand!")));
                     plugin.saveConfig();
                     plugin.getWheelManager().respawnAll();
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.9f, 1.3f);
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&aBekleme hologramı satırları varsayılana sıfırlandı!",
-                            "&aIdle hologram lines reset to default!"
-                    )));
+                            "&aIdle hologram lines reset to default!")));
                     plugin.getAdminMenuManager().openHologramEditor(player);
                 } else if (click.isRightClick()) {
                     if (lines.size() > 1) {
@@ -348,49 +610,46 @@ public class AdminMenuListener implements Listener {
                     } else {
                         player.sendMessage(prefix + ColorUtil.colorize(tr(
                                 "&cEn az 1 satır kalmalıdır!",
-                                "&cAt least 1 line must remain!"
-                        )));
+                                "&cAt least 1 line must remain!")));
                     }
                 } else {
-                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM", AdminMenuManager.ChatEditType.HOLOGRAM_ADD_IDLE_LINE);
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM",
+                            AdminMenuManager.ChatEditType.HOLOGRAM_ADD_IDLE_LINE);
                     player.closeInventory();
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&eBekleme hologramına eklenecek yeni satırı sohbete yazın &7(Başlık için &f%title% &7kullanabilirsiniz, iptal için &ciptal&7):",
-                            "&eType the new line to add to the idle hologram &7(You can use &f%title%&7, type &ccancel &7to abort):"
-                    )));
+                            "&eType the new line to add to the idle hologram &7(You can use &f%title%&7, type &ccancel &7to abort):")));
                 }
             }
             case 12 -> { // Spinning lines
-                List<String> lines = new ArrayList<>(plugin.getConfig().getStringList("settings.hologram.spinning-lines"));
+                List<String> lines = new ArrayList<>(
+                        plugin.getConfig().getStringList("settings.hologram.spinning-lines"));
                 if (lines.isEmpty()) {
                     lines.add("%title%");
                     lines.add(tr("&7Çeviren: &b%player%", "&7Spinner: &b%player%"));
                     lines.add("&e▸ &f%slice% &e◂");
                 }
                 if (click == ClickType.SHIFT_LEFT) {
-                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM", AdminMenuManager.ChatEditType.HOLOGRAM_SET_SPIN_LINES);
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM",
+                            AdminMenuManager.ChatEditType.HOLOGRAM_SET_SPIN_LINES);
                     player.closeInventory();
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&eDönüş hologramının tüm satırlarını aralarına &f| &ekoyarak sohbete yazın:",
-                            "&eType all spinning hologram lines in chat separated by &f|&e:"
-                    )));
+                            "&eType all spinning hologram lines in chat separated by &f|&e:")));
                     player.sendMessage(ColorUtil.colorize(tr(
                             "&7Örnek: &f%title% | &7Çeviren: &b%player% | &e▸ &f%slice% &e◂ &7(İptal: &ciptal&7)",
-                            "&7Example: &f%title% | &7Spinner: &b%player% | &e▸ &f%slice% &e◂ &7(Cancel: &ccancel&7)"
-                    )));
+                            "&7Example: &f%title% | &7Spinner: &b%player% | &e▸ &f%slice% &e◂ &7(Cancel: &ccancel&7)")));
                 } else if (click == ClickType.SHIFT_RIGHT) {
                     plugin.getConfig().set("settings.hologram.spinning-lines", List.of(
                             "%title%",
                             tr("&7Çeviren: &b%player%", "&7Spinner: &b%player%"),
-                            "&e▸ &f%slice% &e◂"
-                    ));
+                            "&e▸ &f%slice% &e◂"));
                     plugin.saveConfig();
                     plugin.getWheelManager().respawnAll();
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.9f, 1.3f);
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&aDönüş hologramı satırları varsayılana sıfırlandı!",
-                            "&aSpinning hologram lines reset to default!"
-                    )));
+                            "&aSpinning hologram lines reset to default!")));
                     plugin.getAdminMenuManager().openHologramEditor(player);
                 } else if (click.isRightClick()) {
                     if (lines.size() > 1) {
@@ -403,16 +662,15 @@ public class AdminMenuListener implements Listener {
                     } else {
                         player.sendMessage(prefix + ColorUtil.colorize(tr(
                                 "&cEn az 1 satır kalmalıdır!",
-                                "&cAt least 1 line must remain!"
-                        )));
+                                "&cAt least 1 line must remain!")));
                     }
                 } else {
-                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM", AdminMenuManager.ChatEditType.HOLOGRAM_ADD_SPIN_LINE);
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), "HOLOGRAM",
+                            AdminMenuManager.ChatEditType.HOLOGRAM_ADD_SPIN_LINE);
                     player.closeInventory();
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&eDönüş hologramına eklenecek yeni satırı sohbete yazın &7(&f%title%&7, &f%player%&7, &f%slice% &7kullanabilirsiniz, iptal: &ciptal&7):",
-                            "&eType the new line to add to the spinning hologram &7(Placeholders: &f%title%&7, &f%player%&7, &f%slice%&7, or &ccancel&7):"
-                    )));
+                            "&eType the new line to add to the spinning hologram &7(Placeholders: &f%title%&7, &f%player%&7, &f%slice%&7, or &ccancel&7):")));
                 }
             }
             case 13 -> { // Height offset
@@ -447,9 +705,11 @@ public class AdminMenuListener implements Listener {
             }
             case 15 -> { // Background cycle
                 List<String> styles = List.of("TRANSPARENT", "DARK", "CRIMSON", "GOLD", "PURPLE", "AQUA");
-                String current = plugin.getConfig().getString("settings.hologram.background", "TRANSPARENT").toUpperCase(Locale.ROOT);
+                String current = plugin.getConfig().getString("settings.hologram.background", "TRANSPARENT")
+                        .toUpperCase(Locale.ROOT);
                 int idx = styles.indexOf(current);
-                if (idx < 0) idx = 0;
+                if (idx < 0)
+                    idx = 0;
                 int nextIdx = click.isRightClick()
                         ? (idx - 1 + styles.size()) % styles.size()
                         : (idx + 1) % styles.size();
@@ -465,7 +725,8 @@ public class AdminMenuListener implements Listener {
                     plugin.getConfig().set("settings.hologram.shadowed", !shadowed);
                 } else {
                     List<String> modes = List.of("CENTER", "VERTICAL", "FIXED");
-                    String current = plugin.getConfig().getString("settings.hologram.billboard", "CENTER").toUpperCase(Locale.ROOT);
+                    String current = plugin.getConfig().getString("settings.hologram.billboard", "CENTER")
+                            .toUpperCase(Locale.ROOT);
                     int idx = modes.indexOf(current);
                     int nextIdx = (idx + 1) % modes.size();
                     plugin.getConfig().set("settings.hologram.billboard", modes.get(nextIdx));
@@ -477,23 +738,34 @@ public class AdminMenuListener implements Listener {
             }
             case 28 -> applyHologramPreset(player,
                     tr("&6&l✦ &e&lTkitsune Şans Çarkı &6&l✦", "&6&l✦ &e&lTkitsune Wheel of Fortune &6&l✦"),
-                    List.of("%title%", tr("&7Elindeki &e&lÖzel Şans Çarkı Bileti &7ile &aSağ Tıkla!", "&7Right-Click with your &e&lFortune Wheel Ticket &7in hand!")),
+                    List.of("%title%",
+                            tr("&7Elindeki &e&lÖzel Şans Çarkı Bileti &7ile &aSağ Tıkla!",
+                                    "&7Right-Click with your &e&lFortune Wheel Ticket &7in hand!")),
                     List.of("%title%", tr("&7Çeviren: &b%player%", "&7Spinner: &b%player%"), "&e▸ &f%slice% &e◂"),
                     "TRANSPARENT", tr("Klasik Altın", "Classic Gold"));
             case 29 -> applyHologramPreset(player,
                     tr("&4&l❖ &c&lKITSUNE &6&lŞANS ÇARKI &4&l❖", "&4&l❖ &c&lKITSUNE &6&lFORTUNE WHEEL &4&l❖"),
-                    List.of("&8&m━━━&4&m━━━&6&l ⛩ &4&m━━━&8&m━━━", "%title%", tr("&7Biletinle &e&lSağ Tıkla &7ve Kadere Meydan Oku!", "&e&lRight-Click &7with a Ticket & Challenge Fate!")),
-                    List.of("&8&m━━━&4&m━━━&6&l ⛩ &4&m━━━&8&m━━━", "%title%", tr("&7Çeviren: &e%player%", "&7Spinner: &e%player%"), "&c&l⚡ &f%slice% &c&l⚡"),
+                    List.of("&8&m━━━&4&m━━━&6&l ⛩ &4&m━━━&8&m━━━", "%title%",
+                            tr("&7Biletinle &e&lSağ Tıkla &7ve Kadere Meydan Oku!",
+                                    "&e&lRight-Click &7with a Ticket & Challenge Fate!")),
+                    List.of("&8&m━━━&4&m━━━&6&l ⛩ &4&m━━━&8&m━━━", "%title%",
+                            tr("&7Çeviren: &e%player%", "&7Spinner: &e%player%"), "&c&l⚡ &f%slice% &c&l⚡"),
                     "TRANSPARENT", tr("Kitsune Tapınağı", "Kitsune Shrine"));
             case 30 -> applyHologramPreset(player,
                     tr("&b&l⚡ &3&lSİBER &d&lŞANS ÇARKI &b&l⚡", "&b&l⚡ &3&lCYBER &d&lFORTUNE WHEEL &b&l⚡"),
-                    List.of("%title%", tr("&d▸ &fBilet ile &b&lSAĞ TIKLA &fve Çevir! &d◂", "&d▸ &b&lRIGHT-CLICK &fwith a Ticket to Spin! &d◂")),
+                    List.of("%title%",
+                            tr("&d▸ &fBilet ile &b&lSAĞ TIKLA &fve Çevir! &d◂",
+                                    "&d▸ &b&lRIGHT-CLICK &fwith a Ticket to Spin! &d◂")),
                     List.of("%title%", tr("&bOyuncu: &f%player%", "&bPlayer: &f%player%"), "&d&l» &e%slice% &d&l«"),
                     "TRANSPARENT", tr("Siber Neon", "Cyber Neon"));
             case 32 -> applyHologramPreset(player,
                     tr("&6&l👑 &e&lKRALİYET &f&lJACKPOT ÇARKI &6&l👑", "&6&l👑 &e&lROYAL &f&lJACKPOT WHEEL &6&l👑"),
-                    List.of("&e&l✦ &6&m──────────────&e&l ✦", "%title%", tr("&fÖzel Bilet ile &a&lSağ Tıkla &fve Kazan!", "&a&lRight-Click &fwith a VIP Ticket to Win!"), "&e&l✦ &6&m──────────────&e&l ✦"),
-                    List.of("&e&l✦ &6&m──────────────&e&l ✦", "%title%", tr("&7Şansını Deneyen: &e%player%", "&7Challenger: &e%player%"), "&6&l👑 &f%slice% &6&l👑"),
+                    List.of("&e&l✦ &6&m──────────────&e&l ✦", "%title%",
+                            tr("&fÖzel Bilet ile &a&lSağ Tıkla &fve Kazan!",
+                                    "&a&lRight-Click &fwith a VIP Ticket to Win!"),
+                            "&e&l✦ &6&m──────────────&e&l ✦"),
+                    List.of("&e&l✦ &6&m──────────────&e&l ✦", "%title%",
+                            tr("&7Şansını Deneyen: &e%player%", "&7Challenger: &e%player%"), "&6&l👑 &f%slice% &6&l👑"),
                     "TRANSPARENT", tr("Kraliyet VIP", "Royal VIP"));
             case 33 -> applyHologramPreset(player,
                     tr("&e&lTkitsune Şans Çarkı", "&e&lTkitsune Wheel of Fortune"),
@@ -502,8 +774,11 @@ public class AdminMenuListener implements Listener {
                     "TRANSPARENT", tr("Minimalist Sade", "Minimalist Clean"));
             case 34 -> applyHologramPreset(player,
                     tr("&4&l🔥 &c&lCEHENNEM &6&lATEŞİ ÇARKI &4&l🔥", "&4&l🔥 &c&lHELLFIRE &6&lFORTUNE WHEEL &4&l🔥"),
-                    List.of("%title%", tr("&c▸ &7Ateş Biletinle &6&lSağ Tıkla! &c◂", "&c▸ &6&lRight-Click &7with your Ticket! &c◂")),
-                    List.of("%title%", tr("&c🔥 &7Çeviren: &6%player% &c🔥", "&c🔥 &7Spinner: &6%player% &c🔥"), "&4&l» &e%slice% &4&l«"),
+                    List.of("%title%",
+                            tr("&c▸ &7Ateş Biletinle &6&lSağ Tıkla! &c◂",
+                                    "&c▸ &6&lRight-Click &7with your Ticket! &c◂")),
+                    List.of("%title%", tr("&c🔥 &7Çeviren: &6%player% &c🔥", "&c🔥 &7Spinner: &6%player% &c🔥"),
+                            "&4&l» &e%slice% &4&l«"),
                     "TRANSPARENT", tr("Ateş & Alev", "Hellfire & Flame"));
             case 49 -> {
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.1f);
@@ -512,7 +787,8 @@ public class AdminMenuListener implements Listener {
         }
     }
 
-    private void applyHologramPreset(Player player, String title, List<String> idleLines, List<String> spinLines, String bg, String presetName) {
+    private void applyHologramPreset(Player player, String title, List<String> idleLines, List<String> spinLines,
+            String bg, String presetName) {
         String prefix = ColorUtil.colorize(plugin.getConfig().getString("messages.prefix", "&8[&6&lŞansÇarkı&8] &r"));
         plugin.getConfig().set("settings.hologram.enabled", true);
         plugin.getConfig().set("settings.hologram.title", title);
@@ -524,12 +800,12 @@ public class AdminMenuListener implements Listener {
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.3f);
         player.sendMessage(prefix + ColorUtil.colorize(tr(
                 "&aHologram tasarımı &e" + presetName + " &aşablonu olarak güncellendi!",
-                "&aHologram theme updated to &e" + presetName + "&a!"
-        )));
+                "&aHologram theme updated to &e" + presetName + "&a!")));
         plugin.getAdminMenuManager().openHologramEditor(player);
     }
 
-    private void handleSliceEditorClick(Player player, AdminMenuHolder holder, Inventory topInv, InventoryClickEvent event) {
+    private void handleSliceEditorClick(Player player, AdminMenuHolder holder, Inventory topInv,
+            InventoryClickEvent event) {
         WheelSlice slice = plugin.getSliceManager().getSliceById(holder.getSliceId());
         if (slice == null) {
             event.setCancelled(true);
@@ -566,7 +842,7 @@ public class AdminMenuListener implements Listener {
         String prefix = ColorUtil.colorize(plugin.getConfig().getString("messages.prefix", "&8[&6&lŞansÇarkı&8] &r"));
 
         switch (rawSlot) {
-            case 2 -> { // Change 3D Slice Icon
+            case 1 -> { // Change 3D Slice Icon
                 savePrizeSlotsFromInventory(slice, topInv, false);
                 ItemStack cursor = event.getCursor();
                 if (cursor != null && !cursor.getType().isAir()) {
@@ -593,37 +869,45 @@ public class AdminMenuListener implements Listener {
                 } else {
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&eİpucu: &7Envanterinizden bir eşyayı fareyle tutup &b[Çark Üstü 3D İkon] &7slotuna tıklayarak ikonu değiştirebilirsiniz!",
-                            "&eTip: &7Pick up an item from your inventory with your cursor and click the &b[On-Wheel 3D Icon] &7slot to change the icon!"
-                    )));
+                            "&eTip: &7Pick up an item from your inventory with your cursor and click the &b[On-Wheel 3D Icon] &7slot to change the icon!")));
                 }
             }
-            case 3 -> { // Edit slice-label via chat
+            case 2 -> { // Edit slice-label via chat
                 savePrizeSlotsFromInventory(slice, topInv, false);
-                plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(), AdminMenuManager.ChatEditType.SLICE_LABEL);
+                plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(),
+                        AdminMenuManager.ChatEditType.SLICE_LABEL);
                 player.closeInventory();
                 player.sendMessage(prefix + ColorUtil.colorize(tr(
-                        "&eLütfen sohbete bu dilimin çark üzerinde görünecek yeni yazısını yazın &7(İptal için &ciptal &7yazın):",
-                        "&ePlease type the new on-wheel label for this slice in chat &7(Type &ccancel &7to abort):"
-                )));
+                        "&eLütfen sohbete bu dilimin çark üzerinde ve duyurularda görünecek yeni ödül yazısını yazın &7(İptal için &ciptal &7yazın):",
+                        "&ePlease type the new on-wheel & broadcast reward label for this slice in chat &7(Type &ccancel &7to abort):")));
             }
-            case 4 -> { // Edit display-name via chat
+            case 3 -> { // Edit display-name via chat
                 savePrizeSlotsFromInventory(slice, topInv, false);
-                plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(), AdminMenuManager.ChatEditType.DISPLAY_NAME);
+                plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(),
+                        AdminMenuManager.ChatEditType.DISPLAY_NAME);
                 player.closeInventory();
                 player.sendMessage(prefix + ColorUtil.colorize(tr(
                         "&eLütfen sohbete bu dilimin yeni başlığını yazın &7(Örn: &c&lKırmızı Dilim (Jackpot)&7, iptal için &ciptal&7):",
-                        "&ePlease type the new display name for this slice in chat &7(e.g. &c&lRed Slice (Jackpot)&7, or &ccancel&7):"
-                )));
+                        "&ePlease type the new display name for this slice in chat &7(e.g. &c&lRed Slice (Jackpot)&7, or &ccancel&7):")));
+            }
+            case 4 -> { // Edit screen win title via chat
+                savePrizeSlotsFromInventory(slice, topInv, false);
+                plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(),
+                        AdminMenuManager.ChatEditType.SLICE_TITLE);
+                player.closeInventory();
+                player.sendMessage(prefix + ColorUtil.colorize(tr(
+                        "&eLütfen sohbete kazanıldığında ekranda çıkacak büyük başlığı (Title) yazın &7(Örn: &6&l✦ JACKPOT! ✦ &7veya &ciptal&7):",
+                        "&ePlease type the large screen title shown when winning this slice &7(e.g. &6&l✦ JACKPOT! ✦ &7or &ccancel&7):")));
             }
             case 5 -> { // Commands management
                 savePrizeSlotsFromInventory(slice, topInv, false);
                 if (click.isLeftClick()) {
-                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(), AdminMenuManager.ChatEditType.ADD_COMMAND);
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(),
+                            AdminMenuManager.ChatEditType.ADD_COMMAND);
                     player.closeInventory();
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&eLütfen eklenecek konsol komutunu başında / olmadan yazın &7(Örn: &fgive %player% diamond 16 &7veya &ciptal&7):",
-                            "&ePlease type the console command to add without a leading / &7(e.g. &fgive %player% diamond 16 &7or &ccancel&7):"
-                    )));
+                            "&ePlease type the console command to add without a leading / &7(e.g. &fgive %player% diamond 16 &7or &ccancel&7):")));
                 } else if (click == ClickType.SHIFT_RIGHT) {
                     slice.setCommands(new ArrayList<>());
                     plugin.getSliceManager().saveSliceToConfig(slice);
@@ -643,21 +927,39 @@ public class AdminMenuListener implements Listener {
             case 6 -> { // Toggle broadcast
                 savePrizeSlotsFromInventory(slice, topInv, false);
                 slice.setBroadcast(!slice.isBroadcast());
+                plugin.getSliceManager().syncDynamicRewardTexts(slice);
                 plugin.getSliceManager().saveSliceToConfig(slice);
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
                 plugin.getAdminMenuManager().openSliceEditor(player, slice);
+            }
+            case 7 -> { // Slice win sound
+                savePrizeSlotsFromInventory(slice, topInv, false);
+                if (click.isRightClick()) {
+                    plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(),
+                            AdminMenuManager.ChatEditType.SLICE_SOUND);
+                    player.closeInventory();
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&eBu dilim için kazanma sesini sohbete yazın &7(Örn: &fUI_TOAST_CHALLENGE_COMPLETE &7veya &ciptal&7):",
+                            "&eType the win sound for this slice in chat &7(e.g. &fUI_TOAST_CHALLENGE_COMPLETE &7or &ccancel&7):")));
+                } else {
+                    String next = cyclePreset(slice.getSound(), WIN_SOUND_PRESETS);
+                    slice.setSound(next);
+                    plugin.getSliceManager().saveSliceToConfig(slice);
+                    previewSound(player, next);
+                    plugin.getAdminMenuManager().openSliceEditor(player, slice);
+                }
             }
             case 10 -> adjustChance(player, slice, topInv, -10.0);
             case 11 -> adjustChance(player, slice, topInv, -5.0);
             case 12 -> adjustChance(player, slice, topInv, click.isRightClick() ? -0.5 : -1.0);
             case 13 -> { // Exact chance via chat
                 savePrizeSlotsFromInventory(slice, topInv, false);
-                plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(), AdminMenuManager.ChatEditType.CHANCE);
+                plugin.getAdminMenuManager().setPendingChatEdit(player.getUniqueId(), slice.getId(),
+                        AdminMenuManager.ChatEditType.CHANCE);
                 player.closeInventory();
                 player.sendMessage(prefix + ColorUtil.colorize(tr(
                         "&eLütfen bu dilim için yeni şans oranını sayı olarak yazın &7(Örn: &a15.5 &7veya &ciptal&7):",
-                        "&ePlease type the new chance weight as a number &7(e.g. &a15.5 &7or &ccancel&7):"
-                )));
+                        "&ePlease type the new chance weight as a number &7(e.g. &a15.5 &7or &ccancel&7):")));
             }
             case 14 -> adjustChance(player, slice, topInv, click.isRightClick() ? 0.5 : 1.0);
             case 15 -> adjustChance(player, slice, topInv, 5.0);
@@ -672,8 +974,7 @@ public class AdminMenuListener implements Listener {
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.9f, 1.3f);
                 player.sendMessage(prefix + ColorUtil.colorize("&a" + slice.getDisplayName() + tr(
                         " &aödülleri kaydedildi ve 3D çark güncellendi!",
-                        " &arewards saved and 3D wheel updated!"
-                )));
+                        " &arewards saved and 3D wheel updated!")));
                 plugin.getAdminMenuManager().openSliceEditor(player, slice);
             }
             case 50 -> { // Clear commands so only drag-and-drop items are given
@@ -683,8 +984,7 @@ public class AdminMenuListener implements Listener {
                 player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.7f, 1.2f);
                 player.sendMessage(prefix + ColorUtil.colorize(tr(
                         "&eKomut ödülleri temizlendi; artık sadece kutuya koyduğunuz eşyalar verilecek.",
-                        "&eCommand rewards cleared; only items placed in the prize slots will be awarded."
-                )));
+                        "&eCommand rewards cleared; only items placed in the prize slots will be awarded.")));
                 plugin.getAdminMenuManager().openSliceEditor(player, slice);
             }
         }
@@ -722,10 +1022,12 @@ public class AdminMenuListener implements Listener {
                 slice.setCustomIconItem(single);
             }
             if (!hadItemsBefore || autoUpdateWheelVisuals) {
-                String itemName = (first.hasItemMeta() && first.getItemMeta() != null && first.getItemMeta().hasDisplayName())
-                        ? first.getItemMeta().getDisplayName()
-                        : formatMaterialName(first.getType());
+                String itemName = (first.hasItemMeta() && first.getItemMeta() != null
+                        && first.getItemMeta().hasDisplayName())
+                                ? first.getItemMeta().getDisplayName()
+                                : formatMaterialName(first.getType());
                 slice.setSliceLabel(ColorUtil.colorize("&e&l" + first.getAmount() + "x &f" + itemName));
+                plugin.getSliceManager().syncDynamicRewardTexts(slice);
             }
         }
 
@@ -740,8 +1042,10 @@ public class AdminMenuListener implements Listener {
         String[] parts = raw.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String p : parts) {
-            if (p.isEmpty()) continue;
-            if (sb.length() > 0) sb.append(' ');
+            if (p.isEmpty())
+                continue;
+            if (sb.length() > 0)
+                sb.append(' ');
             sb.append(Character.toUpperCase(p.charAt(0))).append(p.substring(1));
         }
         return sb.toString();
@@ -754,11 +1058,71 @@ public class AdminMenuListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        AdminMenuManager.PendingChatEdit edit = plugin.getAdminMenuManager().consumePendingChatEdit(player.getUniqueId());
+        AdminMenuManager.PendingChatEdit edit = plugin.getAdminMenuManager()
+                .consumePendingChatEdit(player.getUniqueId());
         String msg = event.getMessage().trim();
 
         Bukkit.getScheduler().runTask(plugin, () -> {
-            String prefix = ColorUtil.colorize(plugin.getConfig().getString("messages.prefix", "&8[&6&lŞansÇarkı&8] &r"));
+            String prefix = ColorUtil
+                    .colorize(plugin.getConfig().getString("messages.prefix", "&8[&6&lŞansÇarkı&8] &r"));
+
+            // 1. Ticket Name / Lore edits
+            if (edit.type() == AdminMenuManager.ChatEditType.TICKET_NAME
+                    || edit.type() == AdminMenuManager.ChatEditType.TICKET_LORE) {
+                if (msg.equalsIgnoreCase("iptal") || msg.equalsIgnoreCase("cancel")) {
+                    player.sendMessage(prefix + ColorUtil.colorize(tr("&cİşlem iptal edildi.", "&cAction cancelled.")));
+                    plugin.getAdminMenuManager().openMainMenu(player);
+                    return;
+                }
+                if (edit.type() == AdminMenuManager.ChatEditType.TICKET_NAME) {
+                    plugin.getTicketManager().setTicketName(msg);
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&aBilet ismi güncellendi: &r",
+                            "&aTicket name updated: &r")
+                            + ColorUtil.colorize(plugin.getTicketManager().getTicketName())));
+                } else {
+                    String[] parts = msg.split("\\|");
+                    List<String> lore = new ArrayList<>();
+                    for (String p : parts) {
+                        lore.add(p.trim());
+                    }
+                    plugin.getTicketManager().setTicketLore(lore);
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&aBilet açıklaması (lore) güncellendi!",
+                            "&aTicket lore updated!")));
+                }
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.9f, 1.2f);
+                plugin.getAdminMenuManager().openMainMenu(player);
+                return;
+            }
+
+            // 2. Global Sound Edits
+            if (edit.type() == AdminMenuManager.ChatEditType.SOUND_SPIN_START
+                    || edit.type() == AdminMenuManager.ChatEditType.SOUND_SPIN_TICK
+                    || edit.type() == AdminMenuManager.ChatEditType.SOUND_WIN
+                    || edit.type() == AdminMenuManager.ChatEditType.SOUND_ERROR) {
+                if (msg.equalsIgnoreCase("iptal") || msg.equalsIgnoreCase("cancel")) {
+                    player.sendMessage(prefix + ColorUtil.colorize(tr("&cİşlem iptal edildi.", "&cAction cancelled.")));
+                    plugin.getAdminMenuManager().openSoundEditor(player);
+                    return;
+                }
+                String cleanSound = msg.toUpperCase(Locale.ROOT).trim();
+                switch (edit.type()) {
+                    case SOUND_SPIN_START -> plugin.getConfig().set("settings.sounds.spin-start", cleanSound);
+                    case SOUND_SPIN_TICK -> plugin.getConfig().set("settings.sounds.spin-tick", cleanSound);
+                    case SOUND_WIN -> plugin.getConfig().set("settings.sounds.win-default", cleanSound);
+                    case SOUND_ERROR -> plugin.getConfig().set("settings.sounds.error", cleanSound);
+                }
+                plugin.saveConfig();
+                previewSound(player, cleanSound);
+                player.sendMessage(prefix + ColorUtil.colorize(tr(
+                        "&aÇark sesi güncellendi: &e" + cleanSound,
+                        "&aWheel sound updated: &e" + cleanSound)));
+                plugin.getAdminMenuManager().openSoundEditor(player);
+                return;
+            }
+
+            // 3. Hologram Edits
             if (edit.type() == AdminMenuManager.ChatEditType.HOLOGRAM_TITLE
                     || edit.type() == AdminMenuManager.ChatEditType.HOLOGRAM_ADD_IDLE_LINE
                     || edit.type() == AdminMenuManager.ChatEditType.HOLOGRAM_SET_IDLE_LINES
@@ -774,11 +1138,11 @@ public class AdminMenuListener implements Listener {
                         plugin.getWheelManager().setHologramTitle(msg);
                         player.sendMessage(prefix + ColorUtil.colorize(tr(
                                 "&aÇark hologram başlığı güncellendi: &r",
-                                "&aWheel hologram title updated: &r"
-                        ) + plugin.getWheelManager().getHologramTitle()));
+                                "&aWheel hologram title updated: &r") + plugin.getWheelManager().getHologramTitle()));
                     }
                     case HOLOGRAM_ADD_IDLE_LINE -> {
-                        List<String> lines = new ArrayList<>(plugin.getConfig().getStringList("settings.hologram.idle-lines"));
+                        List<String> lines = new ArrayList<>(
+                                plugin.getConfig().getStringList("settings.hologram.idle-lines"));
                         if (lines.isEmpty()) {
                             lines.add("%title%");
                         }
@@ -788,8 +1152,7 @@ public class AdminMenuListener implements Listener {
                         plugin.getWheelManager().respawnAll();
                         player.sendMessage(prefix + ColorUtil.colorize(tr(
                                 "&aBekleme hologramına yeni satır eklendi: &r",
-                                "&aAdded new idle hologram line: &r"
-                        ) + ColorUtil.colorize(msg)));
+                                "&aAdded new idle hologram line: &r") + ColorUtil.colorize(msg)));
                     }
                     case HOLOGRAM_SET_IDLE_LINES -> {
                         String[] parts = msg.split("\\|");
@@ -802,11 +1165,11 @@ public class AdminMenuListener implements Listener {
                         plugin.getWheelManager().respawnAll();
                         player.sendMessage(prefix + ColorUtil.colorize(tr(
                                 "&aBekleme hologramı satırları komple güncellendi (&e" + lines.size() + " satır&a)!",
-                                "&aIdle hologram lines updated (&e" + lines.size() + " lines&a)!"
-                        )));
+                                "&aIdle hologram lines updated (&e" + lines.size() + " lines&a)!")));
                     }
                     case HOLOGRAM_ADD_SPIN_LINE -> {
-                        List<String> lines = new ArrayList<>(plugin.getConfig().getStringList("settings.hologram.spinning-lines"));
+                        List<String> lines = new ArrayList<>(
+                                plugin.getConfig().getStringList("settings.hologram.spinning-lines"));
                         if (lines.isEmpty()) {
                             lines.add("%title%");
                         }
@@ -816,8 +1179,7 @@ public class AdminMenuListener implements Listener {
                         plugin.getWheelManager().respawnAll();
                         player.sendMessage(prefix + ColorUtil.colorize(tr(
                                 "&aDönüş hologramına yeni satır eklendi: &r",
-                                "&aAdded new spinning hologram line: &r"
-                        ) + ColorUtil.colorize(msg)));
+                                "&aAdded new spinning hologram line: &r") + ColorUtil.colorize(msg)));
                     }
                     case HOLOGRAM_SET_SPIN_LINES -> {
                         String[] parts = msg.split("\\|");
@@ -830,8 +1192,7 @@ public class AdminMenuListener implements Listener {
                         plugin.getWheelManager().respawnAll();
                         player.sendMessage(prefix + ColorUtil.colorize(tr(
                                 "&aDönüş hologramı satırları komple güncellendi (&e" + lines.size() + " satır&a)!",
-                                "&aSpinning hologram lines updated (&e" + lines.size() + " lines&a)!"
-                        )));
+                                "&aSpinning hologram lines updated (&e" + lines.size() + " lines&a)!")));
                     }
                 }
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.9f, 1.2f);
@@ -839,13 +1200,20 @@ public class AdminMenuListener implements Listener {
                 return;
             }
 
-            WheelSlice slice = plugin.getSliceManager().getSliceById(edit.sliceId());
+            // 4. Slice Edits
+            boolean fromSoundMenu = edit.sliceId() != null && edit.sliceId().startsWith("SOUND_MENU:");
+            String actualSliceId = fromSoundMenu ? edit.sliceId().substring("SOUND_MENU:".length()) : edit.sliceId();
+            WheelSlice slice = plugin.getSliceManager().getSliceById(actualSliceId);
             if (slice == null) {
                 return;
             }
             if (msg.equalsIgnoreCase("iptal") || msg.equalsIgnoreCase("cancel")) {
                 player.sendMessage(prefix + ColorUtil.colorize(tr("&cİşlem iptal edildi.", "&cAction cancelled.")));
-                plugin.getAdminMenuManager().openSliceEditor(player, slice);
+                if (fromSoundMenu) {
+                    plugin.getAdminMenuManager().openSoundEditor(player);
+                } else {
+                    plugin.getAdminMenuManager().openSliceEditor(player, slice);
+                }
                 return;
             }
 
@@ -857,28 +1225,35 @@ public class AdminMenuListener implements Listener {
                         plugin.getSliceManager().saveSliceToConfig(slice);
                         player.sendMessage(prefix + ColorUtil.colorize(tr(
                                 "&aŞans oranı &e" + slice.getChance() + " &aolarak güncellendi!",
-                                "&aChance weight updated to &e" + slice.getChance() + "&a!"
-                        )));
+                                "&aChance weight updated to &e" + slice.getChance() + "&a!")));
                     } catch (NumberFormatException e) {
-                        player.sendMessage(prefix + ColorUtil.colorize(tr("&cGeçersiz sayı girdiniz!", "&cInvalid number!")));
+                        player.sendMessage(
+                                prefix + ColorUtil.colorize(tr("&cGeçersiz sayı girdiniz!", "&cInvalid number!")));
                     }
                 }
                 case SLICE_LABEL -> {
                     slice.setSliceLabel(ColorUtil.colorize(msg));
+                    plugin.getSliceManager().syncDynamicRewardTexts(slice);
                     plugin.getSliceManager().saveSliceToConfig(slice);
                     plugin.getWheelManager().respawnAll();
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
-                            "&aÇark üstü yazı güncellendi: &r",
-                            "&aOn-wheel label updated: &r"
-                    ) + slice.getSliceLabel()));
+                            "&aÇark üstü ve duyuru ödül yazısı güncellendi: &r",
+                            "&aOn-wheel & broadcast reward label updated: &r") + slice.getSliceLabel()));
                 }
                 case DISPLAY_NAME -> {
                     slice.setDisplayName(ColorUtil.colorize(msg));
+                    plugin.getSliceManager().syncDynamicRewardTexts(slice);
                     plugin.getSliceManager().saveSliceToConfig(slice);
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
-                            "&aDilim başlığı güncellendi: &r",
-                            "&aSlice display name updated: &r"
-                    ) + slice.getDisplayName()));
+                            "&aDilim başlığı ve duyuru adı güncellendi: &r",
+                            "&aSlice display name & broadcast title updated: &r") + slice.getDisplayName()));
+                }
+                case SLICE_TITLE -> {
+                    slice.setTitle(ColorUtil.colorize(msg));
+                    plugin.getSliceManager().saveSliceToConfig(slice);
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&aKazanma ekran başlığı (Title) güncellendi: &r",
+                            "&aScreen win title updated: &r") + slice.getTitle()));
                 }
                 case ADD_COMMAND -> {
                     String cleanCmd = msg.startsWith("/") ? msg.substring(1) : msg;
@@ -888,8 +1263,20 @@ public class AdminMenuListener implements Listener {
                     plugin.getSliceManager().saveSliceToConfig(slice);
                     player.sendMessage(prefix + ColorUtil.colorize(tr(
                             "&aYeni ödül komutu eklendi: &e/",
-                            "&aAdded new reward command: &e/"
-                    ) + cleanCmd));
+                            "&aAdded new reward command: &e/") + cleanCmd));
+                }
+                case SLICE_SOUND -> {
+                    String cleanSound = msg.toUpperCase(Locale.ROOT).trim();
+                    slice.setSound(cleanSound);
+                    plugin.getSliceManager().saveSliceToConfig(slice);
+                    previewSound(player, cleanSound);
+                    player.sendMessage(prefix + ColorUtil.colorize(tr(
+                            "&aDilim kazanma sesi güncellendi: &e" + cleanSound,
+                            "&aSlice win sound updated: &e" + cleanSound)));
+                    if (fromSoundMenu) {
+                        plugin.getAdminMenuManager().openSoundEditor(player);
+                        return;
+                    }
                 }
             }
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.9f, 1.2f);

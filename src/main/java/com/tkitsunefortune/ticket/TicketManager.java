@@ -104,6 +104,30 @@ public class TicketManager {
         }
     }
 
+    public String getTicketName() {
+        return plugin.getConfig().getString("ticket.name",
+                plugin.tr("&6&l✦ &e&lTkitsune Şans Çarkı Bileti &6&l✦", "&6&l✦ &e&lTkitsune Fortune Wheel Ticket &6&l✦"));
+    }
+
+    public void setTicketName(String rawName) {
+        String trimmed = rawName == null ? "" : rawName.trim();
+        if (trimmed.isEmpty()) {
+            trimmed = plugin.tr("&6&l✦ &e&lTkitsune Şans Çarkı Bileti &6&l✦", "&6&l✦ &e&lTkitsune Fortune Wheel Ticket &6&l✦");
+        } else if (!trimmed.contains("&") && !trimmed.contains("§")) {
+            trimmed = "&6&l✦ &e&l" + trimmed + " &6&l✦";
+        }
+        plugin.getConfig().set("ticket.name", trimmed);
+        plugin.saveConfig();
+        refreshAllOnlinePlayerTickets();
+        plugin.getWheelManager().respawnAll();
+    }
+
+    public void setTicketLore(List<String> rawLore) {
+        plugin.getConfig().set("ticket.lore", rawLore);
+        plugin.saveConfig();
+        refreshAllOnlinePlayerTickets();
+    }
+
     private void applyGlow(ItemMeta meta) {
         try {
             Method setGlint = ItemMeta.class.getMethod("setEnchantmentGlintOverride", Boolean.class);

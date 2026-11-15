@@ -47,7 +47,7 @@ public class SpinTask extends BukkitRunnable {
         this.durationTicks = Math.max(20, durationTicks);
         this.startAngle = wheel.getCurrentAngleDegrees();
 
-        float jitter = (ThreadLocalRandom.current().nextFloat() * 20.0f) - 10.0f; // [-10, +10] degrees within the 45-deg slice
+        float jitter = (ThreadLocalRandom.current().nextFloat() * 20.0f) - 10.0f;
         float currentMod = ((startAngle % 360.0f) + 360.0f) % 360.0f;
         float desiredMod = ((winningSlice.getTargetAngleDegrees() + jitter) % 360.0f + 360.0f) % 360.0f;
         float deltaToTarget = (desiredMod - currentMod + 360.0f) % 360.0f;
@@ -68,7 +68,6 @@ public class SpinTask extends BukkitRunnable {
         }
 
         double progress = (double) currentTick / (double) durationTicks;
-        // Smooth ease-out deceleration with gentle angular step per tick
         double eased = 1.0 - Math.pow(1.0 - progress, 2.65);
         float angleNow = startAngle + (float) (totalDelta * eased);
 
@@ -83,7 +82,8 @@ public class SpinTask extends BukkitRunnable {
             if (pointerLoc != null && pointerLoc.getWorld() != null) {
                 World world = pointerLoc.getWorld();
                 float pitch = (float) (1.65 - (0.75 * progress));
-                world.playSound(pointerLoc, Sound.BLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON, 0.85f, pitch);
+                String tickSound = plugin.getConfig().getString("settings.sounds.spin-tick", "BLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON");
+                playConfiguredSound(world, pointerLoc, tickSound, 0.85f, pitch);
                 world.spawnParticle(Particle.CRIT, pointerLoc, 2, 0.03, 0.03, 0.03, 0.02);
             }
         }
@@ -99,16 +99,33 @@ public class SpinTask extends BukkitRunnable {
             World world = centerLoc.getWorld();
             world.spawnParticle(Particle.TOTEM_OF_UNDYING, centerLoc, 35, 0.45, 0.45, 0.45, 0.15);
             world.spawnParticle(Particle.END_ROD, centerLoc, 20, 0.4, 0.4, 0.4, 0.05);
-            playConfiguredSound(world, centerLoc, winningSlice.getSound());
+            String winSound = winningSlice.getSound();
+            if (winSound == null || winSound.isBlank()) {
+                winSound = plugin.getConfig().getString("settings.sounds.win-default", "ENTITY_PLAYER_LEVELUP");
+            }
+            playConfiguredSound(world, centerLoc, winSound, 1.0f, 1.0f);
         }
 
         deliverRewards();
 
-        // Return hologram to idle state and unlock wheel after 40 ticks (2 seconds)
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             wheel.setSpinning(false, null);
             wheel.resetHologramToIdle();
         }, 40L);
+    }
+
+    private String formatPlaceholders(String text) {
+        if (text == null) {
+            return "";
+        }
+        String rewardText = winningSlice.getFormattedRewardSummary();
+        String sliceTitle = winningSlice.getDisplayName();
+        return ColorUtil.colorize(text
+                .replace("%player%", playerName)
+                .replace("%reward%", rewardText)
+                .replace("%label%", rewardText)
+                .replace("%slice%", sliceTitle)
+                .replace("%display_name%", sliceTitle));
     }
 
     private void deliverRewards() {
@@ -137,40 +154,44 @@ public class SpinTask extends BukkitRunnable {
         }
 
         if (player != null && player.isOnline()) {
-            String title = winningSlice.getTitle()
-                    .replace("%player%", playerName)
-                    .replace("%reward%", winningSlice.getDisplayName());
-            String subtitle = winningSlice.getSubtitle()
-                    .replace("%player%", playerName)
-                    .replace("%reward%", winningSlice.getDisplayName());
+            String title = formatPlaceholders(winningSlice.getTitle());
+            String subtitle = formatPlaceholders(winningSlice.getSubtitle());
             player.sendTitle(title, subtitle, 10, 65, 20);
 
             for (String msg : winningSlice.getMessages()) {
-                player.sendMessage(prefix + msg
-                        .replace("%player%", playerName)
-                        .replace("%reward%", winningSlice.getDisplayName()));
+                player.sendMessage(prefix + formatPlaceholders(msg));
             }
         }
 
-        if (winningSlice.isBroadcast() && winningSlice.getBroadcastMessage() != null && !winningSlice.getBroadcastMessage().isEmpty()) {
-            String bcast = winningSlice.getBroadcastMessage()
-                    .replace("%player%", playerName)
-                    .replace("%reward%", winningSlice.getDisplayName());
-            Bukkit.broadcastMessage(bcast);
+        if (winningSlice.isBroadcast()) {
+            String rawBcast = winningSlice.getBroadcastMessage();
+            if (rawBcast == null || rawBcast.isBlank()) {
+                rawBcast = plugin.tr(
+                        "&6&l✦ &e%player% &7Şans Çarkından &r%slice% &8(&r%reward%&8) &7ödülünü kazandı! &6&l✦",
+                        "&6&l✦ &e%player% &7won &r%slice% &8(&r%reward%&8) &7from the Wheel of Fortune! &6&l✦"
+                );
+            }
+            Bukkit.broadcastMessage(formatPlaceholders(rawBcast));
         }
     }
 
-    private void playConfiguredSound(World world, Location loc, String soundName) {
-        if (soundName == null || soundName.isEmpty()) {
-            world.playSound(loc, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+    private void playConfiguredSound(World world, Location loc, String soundName, float baseVolume, float pitch) {
+        if (!plugin.getConfig().getBoolean("settings.sounds.enabled", true)) {
             return;
         }
+        if (soundName == null || soundName.isBlank() || soundName.equalsIgnoreCase("NONE") || soundName.equalsIgnoreCase("KAPALI")) {
+            return;
+        }
+        float volumeMultiplier = (float) plugin.getConfig().getDouble("settings.sounds.volume", 1.0);
+        float finalVol = Math.max(0.0f, baseVolume * volumeMultiplier);
         try {
             Sound sound = Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
-            world.playSound(loc, sound, 1.0f, 1.0f);
+            world.playSound(loc, sound, finalVol, pitch);
         } catch (IllegalArgumentException ignored) {
-            world.playSound(loc, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+            try {
+                world.playSound(loc, soundName.toLowerCase(Locale.ROOT), finalVol, pitch);
+            } catch (Throwable ignored2) {
+            }
         }
     }
 }
-
